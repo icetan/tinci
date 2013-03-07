@@ -1,0 +1,14 @@
+#!/bin/sh
+
+EMAILS=$(git config --get tinci.emails)
+[ -n "$EMAILS" ] || exit
+
+read input
+REV=$(echo "$input" | cut -d ' ' -f 2)
+LOGFILE=tinci/$REV.log
+REPO=$(basename `pwd`)
+if [ $1 -eq 0 ];then
+  mail -s "tinci: $REPO build has been broken at revision $REV!" $EMAILS < $LOGFILE
+else
+  mail -s "tinci: $REPO build is still failing!" $EMAILS < $LOGFILE
+fi

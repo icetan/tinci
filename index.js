@@ -26,36 +26,34 @@ function template(model) {
   return html;
 }
 
-function logToHtml(file) {
-  var lines = fs.readFileSync(file, 'utf8').trim().split('\n'),
-      success = lines.slice(-1)[0] === '0',
-      rev = path.basename(file, '.log'),
-      ctime = fs.statSync(file).ctime;
-  return {
-    ctime: ctime,
-    html: '<h2 class="' + (success ? 'success' : 'failed') + '">' +
-        (success ? '✓ ' : '✗ ') + ctime + '</h2>' +
-      '<h3>' + rev + '</h3>' +
-      '<pre>'+lines.slice(0,-2).join('<br>')+'</pre>'
-  };
+function logToHtml(log) {
+  var lines = fs.readFileSync(log.path, 'utf8').trim().split('\n'),
+      success = lines.slice(-1)[0] === '0';
+  return '<h2 class="' + (success ? 'success' : 'failed') + '">' +
+      (success ? '✓ ' : '✗ ') + log.ctime + '</h2>' +
+    '<h3>' + log.rev + '</h3>' +
+    '<pre>'+lines.slice(0,-2).join('<br>')+'</pre>';
 }
 
-function logHtml(tincipath) {
+function logs(tincipath) {
   return fs.readdirSync(tincipath).filter(function(file){
     return file.slice(-4) === '.log';
   })
   .map(function(file) {
-    return logToHtml(path.join(tincipath, file));
+    var filepath = path.join(tincipath, file);
+    return {
+      path: filepath,
+      rev: path.basename(file, '.log'),
+      ctime: fs.statSync(filepath).ctime
+    };
   })
-  .sort(function(a, b){return b.ctime-a.ctime})
-  .map(function(log){return log.html;})
-  .join('');
+  .sort(function(a, b){return b.ctime-a.ctime});
 }
 
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
-      reponame, tincipath, model = {};
+      reponame, tincipath, model = {}, logs_, page;
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname);
     if (fs.existsSync(path.join(pathname, '.git')))
@@ -65,10 +63,19 @@ http.createServer(function(req, res) {
         'Content-Type': 'text/html'
       });
       model.title = reponame;
-      model.logs = "No logs yet";
+      model.logs = "No logs";
       tincipath = path.join(pathname, '.tinci');
       if (fs.existsSync(tincipath)) {
-        model.logs = logHtml(tincipath) || model.logs;
+        logs_ = logs(tincipath);
+        page = (url.query.page || (logs.length-10)+',').split(',');
+        model.logs = logs_.slice(
+          page[0],
+          page[1] === ''
+            ? undefined
+            : parseInt(page[0])+(parseInt(page[1])||10)
+        ).map(function(log) {
+          return logToHtml(log);
+        }).join('') || model.logs;
       } else {
         if (url.query.runner) {
           copyHook(pathname, url.query.runner, url.query.branch||'master');

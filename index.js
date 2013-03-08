@@ -83,7 +83,7 @@ http.createServer(function(req, res) {
             );
           }
         })().map(function(log) {
-          return logToHtml(log);
+          return log ? logToHtml(log) : '';
         }).reverse().join('') || model.logs;
       } else {
         if (url.query.runner) {

@@ -5,16 +5,15 @@ BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master
 
 read input
-REF=$(echo "$input" | cut -d ' ' -f 3)
-[ "$REF" = "refs/heads/$BRANCH" ] || exit
+[ -n "$(echo "$input" | cut -d ' ' -f 3 | grep -E "^refs/heads/($BRANCH)$")" ] || exit
 
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
 FAIL=hooks/tinci-fail
 REV=$(echo "$input" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
-mkdir -p tinci
-cd tinci
+mkdir -p .tinci
+cd .tinci
 PREVSTAT=$(tail -n1 `ls -1t | head -n1`)
 [ -n "$PREVSTAT" ] || PREVSTAT=0
 git clone .. -b "$BRANCH" $REV > /dev/null

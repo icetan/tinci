@@ -16,8 +16,9 @@ mkdir -p .tinci
 cd .tinci
 PREVSTAT=$(tail -n1 `ls -1t | head -n1`)
 [ -n "$PREVSTAT" ] || PREVSTAT=0
-git clone .. -b "$BRANCH" $REV > /dev/null
+git clone .. $REV > /dev/null
 cd $REV
+git reset --hard $REV > /dev/null
 echo "=== tinci (v$VERSION) is running '$CMD' ===" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "Build exited with code:\n$?"; } | tee -a $LOGFILE
 if [ $(tail -n1 $LOGFILE) -eq 0 ];then

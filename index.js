@@ -13,7 +13,7 @@ var fs = require('fs'),
 function copyHook(to, runner, branch, callback) {
   var cmd = 'cp '+hookpath+' '+to+'/hooks/post-receive && git config -f '+
     to+'/config --add tinci.runner "'+runner+'" && git config -f ' +
-    to+'/config --add tinci.branch "'+branch+'" && mkdir '+to+'/.tinci';
+    to+'/config --add tinci.branch "'+branch+'" && mkdir -p '+to+'/.tinci';
   console.log(cmd);
   exec(cmd, function (err, stdout, stderr) {
     console.log(err, stdout, stderr);

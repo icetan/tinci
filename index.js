@@ -82,7 +82,7 @@ http.createServer(function(req, res) {
           if (url.query.log) {
             return [dict[url.query.log]];
           } else {
-            page = (url.query.page || (ls.length-10)+',').split(',');
+            page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
             return ls.slice(
               page[0],
               page[1] === ''

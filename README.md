@@ -21,3 +21,18 @@ To run tinci on another branch.
 ```
 $ git config -f my/repo.git/config --add tinci.branch my-feature
 ```
+
+## tinci vision
+
+You can view tinci logs for a GIT repo over HTTP.
+
+```
+$ node tinci/index.js
+```
+
+Or.
+
+```
+$ npm install -g tinci
+$ tinci
+```

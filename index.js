@@ -1,8 +1,10 @@
+#!/usr/bin/env node
+
 var fs = require('fs'),
     path = require('path'),
     parse = require('url').parse,
     http = require('http'),
-    port = process.argv[2],
+    port = parseInt(process.argv[2]) || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8');
 
 function template(model) {
@@ -55,4 +57,6 @@ http.createServer(function(req, res) {
     res.writeHead(404);
     res.end("Directory "+pathname+" not found.");
   }
-}).listen(parseInt(port || 4567));
+}).listen(port);
+
+console.log('tinci vision at http://localhost:'+port+'/your/git/repo');

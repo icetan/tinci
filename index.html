@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>tinci by icetan</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>tinci</h1>
+        <p>TINy Continuous Integration script for use with GIT hooks</p>
+
+        <p class="view"><a href="https://github.com/icetan/tinci">View the Project on GitHub <small>icetan/tinci</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/icetan/tinci/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/icetan/tinci/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/icetan/tinci">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>tinci</h1>
+
+<p><em>TINy Continuous Integration script for use with GIT hooks</em></p>
+
+<p><img src="https://raw.github.com/icetan/tinci/gh-pages/screenshot.png" alt="Screenshot of tinci GUI"></p>
+
+<h2>For the looks</h2>
+
+<p>You can setup tinci for a GIT repo and view the build logs over HTTP.</p>
+
+<pre><code>$ git clone git://github.com/icetan/tinci
+$ node tinci/index.js my/git/repo/dir
+$ open http://localhost:4567
+</code></pre>
+
+<p>Or.</p>
+
+<pre><code>$ npm install -g tinci
+$ tinci my/git/repo/dir
+</code></pre>
+
+<h2>Just the hooks</h2>
+
+<p>If you don't want the GUI then you can just copy the hook script to your GIT
+repo.</p>
+
+<pre><code>$ cp tinci/hooks/tinci my/.git/hooks/post-receive
+$ git config -f my/.git/config --add tinci.runner "make test"
+</code></pre>
+
+<p>tinci will now run the shell command 'make test' each time someone pushes to
+your repos master branch.</p>
+
+<p>To run tinci on another branch.</p>
+
+<pre><code>$ git config -f my/.git/config --add tinci.branch my-feature
+</code></pre>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/icetan">icetan</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>

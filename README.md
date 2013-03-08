@@ -2,6 +2,8 @@
 
 *TINy Continuous Integration script for use with GIT hooks*
 
+![Screenshot of tinci GUI](https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png)
+
 ## tinci vision
 
 You can setup tinci for a GIT repo and view the build logs over HTTP.

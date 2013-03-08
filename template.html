@@ -29,15 +29,15 @@
       #logs {
         cursor: pointer;
       }
-      #logs > pre {
-        transition: max-height 0.5s linear;
-        -webkit-transition: max-height 0.5s linear;
-        -moz-transition: max-height 0.5s linear;
+      article > pre {
+        transition: max-height 0.3s linear;
+        -webkit-transition: max-height 0.3s linear;
+        -moz-transition: max-height 0.3s linear;
         max-height: 0;
         overflow: auto;
       }
       .open {
-        max-height: 480px !important;
+        max-height: 1000px !important;
       }
     </style>
   </head>
@@ -62,9 +62,9 @@
     }
     for (i = 0, len = logs.length; i < len; i++) {
       (function(el){
-        var pre = el.parentElement.lastChild;
+        var pre = el.lastChild;
         pre._args = ['open',''];
-        el.onclick = function() {
+        el.firstChild.onclick = function() {
           cssclass.apply(pre, (pre._args=pre._args.reverse()));
         };
       })(logs[i]);

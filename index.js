@@ -29,10 +29,10 @@ function template(model) {
 function logToHtml(log) {
   var lines = fs.readFileSync(log.path, 'utf8').trim().split('\n'),
       success = lines.slice(-1)[0] === '0';
-  return '<h2 class="' + (success ? 'success' : 'failed') + '">' +
+  return '<article><h2 class="' + (success ? 'success' : 'failed') + '">' +
       (success ? '✓ ' : '✗ ') + log.ctime + '</h2>' +
     '<h3><a href="?log='+log.rev+'">' + log.rev + '</a></h3>' +
-    '<pre>'+lines.slice(0,-2).join('<br>')+'</pre>';
+    '<pre>'+lines.slice(0,-2).join('<br>')+'</pre></article>';
 }
 
 function logs(tincipath) {

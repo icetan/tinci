@@ -11,7 +11,7 @@
         margin-top: 1.5em;
         color: #333;
       }
-      h3 {
+      h3, a {
         font-style: italic;
         font-weight: normal;
         color: #666;
@@ -19,25 +19,22 @@
       form {
         display: none;
       }
-      .show {
-        display: block;
-      }
       input[type=text], button {
         font-size: 1em;
         width: 24em;
       }
-      #logs {
+      article > h2 {
         cursor: pointer;
       }
       article > pre {
-        transition: max-height 0.3s linear;
-        -webkit-transition: max-height 0.3s linear;
-        -moz-transition: max-height 0.3s linear;
-        max-height: 0;
-        overflow: auto;
+        height: 0;
+        overflow: hidden;
+      }
+      .show {
+        display: block;
       }
       .open {
-        max-height: 1000px !important;
+        height: auto !important;
       }
     </style>
   </head>
@@ -55,12 +52,17 @@
     <div id="logs">{{logs}}</div>
   </body>
   <script>
+  !function() {
     var logs = document.getElementById('logs').children,
-        i, len;
+        i = 0, len = logs.length;
     function cssclass(rm, add) {
       this.className = this.className.replace(new RegExp('(^| +)('+rm+'($| +))+', 'g'), '')+' '+add;
     }
-    for (i = 0, len = logs.length; i < len; i++) {
+    if (len === 1) {
+      cssclass.call(logs[0].lastChild, '', 'open');
+      return;
+    }
+    for (;i < len; i++) {
       (function(el){
         var pre = el.lastChild;
         pre._args = ['open',''];
@@ -69,5 +71,6 @@
         };
       })(logs[i]);
     }
+  }();
   </script>
 </html>

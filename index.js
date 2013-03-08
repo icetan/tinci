@@ -26,15 +26,16 @@ function template(model) {
   return html;
 }
 
-function logToHtml(log) {
+function parseLog(log) {
   var lines = fs.readFileSync(log.path, 'utf8').trim().split('\n'),
       exitcode = lines.slice(-1)[0],
       success = /^\d+$/.test(exitcode) ? (exitcode === '0') : undefined;
-  return '<article><h2 class="' +
-    (success ? 'success' : (success != null ? 'failed' : 'incomplete')) + '">' +
-    (success ? '✓ ' : (success != null ? '✗ ' : '- ')) + log.ctime + '</h2>' +
-    '<h3><a href="?log='+log.rev+'">' + log.rev + '</a></h3>' +
+  log.success = success ? '✓' : (success != null ? '✗' : '—');
+  log.html = log.html || '<article><h2><span class="' + log.success + '">' +
+    log.success + '</span> ' + log.ctime +
+    ' <small><a href="?log='+log.rev+'">' + log.rev + '</a></small></h2>' +
     '<pre>'+lines.slice(0,-2).join('<br>')+'</pre></article>';
+  return log;
 }
 
 function logs(tincipath) {
@@ -58,7 +59,7 @@ function logs(tincipath) {
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
-      reponame, tincipath, model = {}, logs_, page;
+      reponame, tincipath, model = {}, logs_, ls, dict, page;
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname);
     if (fs.existsSync(path.join(pathname, '.git')))
@@ -67,17 +68,22 @@ http.createServer(function(req, res) {
       res.writeHead(200, {
         'Content-Type': 'text/html'
       });
+      model.status = '—';
       model.title = reponame;
       model.logs = "No logs";
       tincipath = path.join(pathname, '.tinci');
       if (fs.existsSync(tincipath)) {
         logs_ = logs(tincipath);
+        ls = logs_.logs;
+        dict = logs_.dict;
+        if (ls.length)
+          model.status = parseLog(ls[ls.length-1]).success;
         model.logs = (function(){
           if (url.query.log) {
-            return [logs_.dict[url.query.log]];
+            return [dict[url.query.log]];
           } else {
-            page = (url.query.page || (logs.length-10)+',').split(',');
-            return logs_.logs.slice(
+            page = (url.query.page || (ls.length-10)+',').split(',');
+            return ls.slice(
               page[0],
               page[1] === ''
                 ? undefined
@@ -85,7 +91,7 @@ http.createServer(function(req, res) {
             );
           }
         })().map(function(log) {
-          return log ? logToHtml(log) : '';
+          return log ? parseLog(log).html : '';
         }).reverse().join('') || model.logs;
       } else {
         if (url.query.runner) {

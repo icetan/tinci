@@ -2,44 +2,73 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>tinci vision: {{title}}</title>
+    <title>{{status}} {{title}} ᵗⁱⁿᶜⁱ</title>
     <style>
       body {
         font-family: sans-serif;
       }
-      h2 {
-        margin-top: 1.5em;
-        color: #333;
+      h1 {
+        font-size: 3em;
       }
-      h3, a {
+      h2 {
+        margin: 0.4em 0;
+        color: #333;
+        white-space: nowrap;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      a {
         font-style: italic;
         font-weight: normal;
         color: #666;
+      }
+      sup, sub {
+        font-size: 0.35em;
       }
       form {
         display: none;
       }
       input[type=text], button {
         font-size: 1em;
-        width: 24em;
+        width: 32em;
       }
-      article > h2 {
+      pre {
+        margin: 0;
+      }
+      article, form {
         cursor: pointer;
+        padding: 0.8em 0.8em 1em;
+        margin: 0.8em 0;
+        background-color: #fefefe;
+        border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        box-shadow: inset 0 0 1.8em -0.8em gray;
+        -webkit-box-shadow: inset 0 0 1.8em -0.8em gray;
+        -moz-box-shadow: inset 0 0 1.8em -0.8em gray;
       }
-      article > pre {
+      form {
+        padding: 1.8em;
+      }
+      .show {
+        display: inline-block;
+      }
+      .close {
         height: 0;
         overflow: hidden;
       }
-      .show {
-        display: block;
+      .✓ {
+        color: #37BF37;
       }
-      .open {
-        height: auto !important;
+      .✗ {
+        color: #EF4444;
       }
     </style>
+    <script>document.createElement('article');</script>
   </head>
   <body>
-    <h1>{{title}}</h1>
+    <h1><span class="{{status}}">{{status}}<sub>tinci</sub></span> {{title}}</h1>
     <form method="GET" class="{{config}}">
       Install tinci as GIT post-receive hook?
       <h2>Command</h2>
@@ -53,22 +82,19 @@
   </body>
   <script>
   !function() {
-    var logs = document.getElementById('logs').children,
+    var logs = document.getElementsByTagName('pre'),
         i = 0, len = logs.length;
-    function cssclass(rm, add) {
-      this.className = this.className.replace(new RegExp('(^| +)('+rm+'($| +))+', 'g'), '')+' '+add;
+    function classReplace(rm, add) {
+      var re = new RegExp('(^| +)('+rm+'($| +))+', 'g');
+      this.className = this.className.replace(re, '') + ' ' + add;
     }
-    if (len === 1) {
-      cssclass.call(logs[0].lastChild, '', 'open');
-      return;
-    }
-    for (;i < len; i++) {
-      (function(el){
-        var pre = el.lastChild;
-        pre._args = ['open',''];
-        el.firstChild.onclick = function() {
-          cssclass.apply(pre, (pre._args=pre._args.reverse()));
-        };
+    for (; len > 1 && i < len; i++) {
+      (function(pre){
+        var el = pre.parentNode;
+        pre._args = ['close',''];
+        (el.onclick = function() {
+          classReplace.apply(pre, (pre._args=pre._args.reverse()));
+        })();
       })(logs[i]);
     }
   }();

@@ -16,10 +16,21 @@
         font-weight: normal;
         color: #666;
       }
+      form {
+        display: none;
+      }
+      .show {
+        display: block;
+      }
     </style>
   </head>
   <body>
     <h1>{{title}}</h1>
+    <form method="GET" class="{{config}}">
+      <input name="runner" type="text" />
+      <input name="branch" type="text" />
+      <button>Submit</button>
+    </form>
     <div class="logs">{{logs}}</div>
   </body>
 </html>

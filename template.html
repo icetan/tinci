@@ -8,7 +8,7 @@
         font-family: sans-serif;
       }
       h2 {
-        margin-top: 2em;
+        margin-top: 1.5em;
         color: #333;
       }
       h3 {
@@ -22,14 +22,22 @@
       .show {
         display: block;
       }
+      input[type=text], button {
+        font-size: 1em;
+        width: 24em;
+      }
     </style>
   </head>
   <body>
     <h1>{{title}}</h1>
     <form method="GET" class="{{config}}">
-      <input name="runner" type="text" />
-      <input name="branch" type="text" />
-      <button>Submit</button>
+      Install tinci as GIT post-receive hook?
+      <h2>Command</h2>
+      <input name="runner" type="text" placeholder="npm install && npm test" />
+      <h2>Branch</h2>
+      <input name="branch" type="text" placeholder="master" />
+      <h3>Warning: this will overwrite your existing post-reveive hook.</h3>
+      <button>Install</button>
     </form>
     <div class="logs">{{logs}}</div>
   </body>

@@ -10,14 +10,13 @@ var fs = require('fs'),
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
     hookpath = require.resolve('./hooks/tinci');
 
-function copyHook(to, runner, branch, callback) {
+function copyHook(to, runner, branch) {
   var cmd = 'cp '+hookpath+' '+to+'/hooks/post-receive && git config -f '+
     to+'/config --add tinci.runner "'+runner+'" && git config -f ' +
     to+'/config --add tinci.branch "'+branch+'" && mkdir -p '+to+'/.tinci';
   console.log(cmd);
   exec(cmd, function (err, stdout, stderr) {
     console.log(err, stdout, stderr);
-    callback(err, stdout, stderr);
   });
 }
 
@@ -66,21 +65,19 @@ http.createServer(function(req, res) {
         'Content-Type': 'text/html'
       });
       model.title = reponame;
+      model.logs = "No logs yet";
       tincipath = path.join(pathname, '.tinci');
-      if (url.query.runner) {
-        copyHook(pathname, url.query.runner, url.query.branch||'master', function(err) {
-          model.logs = "No logs yet";
-          res.end(template(model));
-        });
+      if (fs.existsSync(tincipath)) {
+        model.logs = logHtml(tincipath) || model.logs;
       } else {
-        if (fs.existsSync(tincipath)) {
-          model.logs = logHtml(tincipath);
+        if (url.query.runner) {
+          copyHook(pathname, url.query.runner, url.query.branch||'master');
         } else {
           model.config = 'show';
           model.logs = '';
         }
-        res.end(template(model));
       }
+      res.end(template(model));
     } else {
       res.writeHead(500);
       res.end("Directory not a git repo?");

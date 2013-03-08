@@ -28,9 +28,11 @@ function template(model) {
 
 function logToHtml(log) {
   var lines = fs.readFileSync(log.path, 'utf8').trim().split('\n'),
-      success = lines.slice(-1)[0] === '0';
-  return '<article><h2 class="' + (success ? 'success' : 'failed') + '">' +
-      (success ? '✓ ' : '✗ ') + log.ctime + '</h2>' +
+      exitcode = lines.slice(-1)[0],
+      success = /^\d+$/.test(exitcode) ? (exitcode === '0') : undefined;
+  return '<article><h2 class="' +
+    (success ? 'success' : (success != null ? 'failed' : 'incomplete')) + '">' +
+    (success ? '✓ ' : (success != null ? '✗ ' : '- ')) + log.ctime + '</h2>' +
     '<h3><a href="?log='+log.rev+'">' + log.rev + '</a></h3>' +
     '<pre>'+lines.slice(0,-2).join('<br>')+'</pre></article>';
 }

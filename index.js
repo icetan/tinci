@@ -4,7 +4,8 @@ var fs = require('fs'),
     path = require('path'),
     parse = require('url').parse,
     http = require('http'),
-    port = parseInt(process.argv[2]) || 4567,
+    rootpath = path.resolve(process.argv[2] || '.'),
+    port = parseInt(process.argv[3]) || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8');
 
 function template(model) {
@@ -28,9 +29,9 @@ function logToHtml(file) {
 }
 
 http.createServer(function(req, res) {
-  var pathname = parse(req.url).pathname,
+  var pathname = path.resolve(rootpath, './'+parse(req.url).pathname),
       tincipath, model = {};
-  if (fs.existsSync(pathname)) {
+  if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     if (fs.existsSync(path.join(pathname, '.git')))
       pathname = path.join(pathname, '.git');
     tincipath = path.join(pathname, '.tinci');
@@ -55,7 +56,7 @@ http.createServer(function(req, res) {
     }
   } else {
     res.writeHead(404);
-    res.end("Directory "+pathname+" not found.");
+    res.end("Directory not found.");
   }
 }).listen(port);
 

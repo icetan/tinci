@@ -36,18 +36,21 @@ function logToHtml(log) {
 }
 
 function logs(tincipath) {
-  return fs.readdirSync(tincipath).filter(function(file){
-    return file.slice(-4) === '.log';
-  })
-  .map(function(file) {
-    var filepath = path.join(tincipath, file);
-    return {
-      path: filepath,
-      rev: path.basename(file, '.log'),
-      ctime: fs.statSync(filepath).ctime
-    };
-  })
-  .sort(function(a, b){return b.ctime-a.ctime});
+  var dict = {};
+  return {
+    dict: dict,
+    logs: fs.readdirSync(tincipath).filter(function(file){
+      return file.slice(-4) === '.log';
+    }).map(function(file) {
+      var filepath = path.join(tincipath, file),
+          rev = path.basename(file, '.log');
+      return dict[rev] = {
+        path: filepath,
+        rev: rev,
+        ctime: fs.statSync(filepath).ctime
+      };
+    }).sort(function(a, b){ return a.ctime - b.ctime; })
+  };
 }
 
 http.createServer(function(req, res) {
@@ -67,15 +70,21 @@ http.createServer(function(req, res) {
       tincipath = path.join(pathname, '.tinci');
       if (fs.existsSync(tincipath)) {
         logs_ = logs(tincipath);
-        page = (url.query.page || (logs.length-10)+',').split(',');
-        model.logs = logs_.slice(
-          page[0],
-          page[1] === ''
-            ? undefined
-            : parseInt(page[0])+(parseInt(page[1])||10)
-        ).map(function(log) {
+        model.logs = (function(){
+          if (url.query.log) {
+            return [logs_.dict[url.query.log]];
+          } else {
+            page = (url.query.page || (logs.length-10)+',').split(',');
+            return logs_.logs.slice(
+              page[0],
+              page[1] === ''
+                ? undefined
+                : parseInt(page[0])+(parseInt(page[1])||10)
+            );
+          }
+        })().map(function(log) {
           return logToHtml(log);
-        }).join('') || model.logs;
+        }).reverse().join('') || model.logs;
       } else {
         if (url.query.runner) {
           copyHook(pathname, url.query.runner, url.query.branch||'master');

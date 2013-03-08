@@ -1,6 +1,6 @@
 {
   "name": "tinci",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "TINy Continuous Integration script for use with GIT hooks",
   "author": "Christopher Fredén <c.freden@gmail.com>",
   "repository": {

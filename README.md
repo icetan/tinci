@@ -21,14 +21,16 @@ $ tinci my/git/repo/dir
 
 ## Just the hook
 
-If you don't want the GUI then you can just copy the hook script to your GIT repo.
+If you don't want the GUI then you can just copy the hook script to your GIT
+repo.
 
 ```
 $ cp tinci/hooks/tinci my/.git/hooks/post-receive
 $ git config -f my/.git/config --add tinci.runner "make test"
 ```
 
-tinci will now run the shell command 'make test' each time someone pushes to your repos master branch.
+tinci will now run the shell command 'make test' each time someone pushes to
+your repos master branch.
 
 To run tinci on another branch.
 

@@ -26,6 +26,19 @@
         font-size: 1em;
         width: 24em;
       }
+      #logs {
+        cursor: pointer;
+      }
+      #logs > pre {
+        transition: max-height 0.5s linear;
+        -webkit-transition: max-height 0.5s linear;
+        -moz-transition: max-height 0.5s linear;
+        max-height: 0;
+        overflow: auto;
+      }
+      .open {
+        max-height: 480px !important;
+      }
     </style>
   </head>
   <body>
@@ -39,6 +52,22 @@
       <h3>Warning: this will overwrite your existing post-reveive hook.</h3>
       <button>Install</button>
     </form>
-    <div class="logs">{{logs}}</div>
+    <div id="logs">{{logs}}</div>
   </body>
+  <script>
+    var logs = document.getElementById('logs').children,
+        i, len;
+    function cssclass(rm, add) {
+      this.className = this.className.replace(new RegExp('(^| +)('+rm+'($| +))+', 'g'), '')+' '+add;
+    }
+    for (i = 0, len = logs.length; i < len; i++) {
+      (function(el){
+        var pre = el.parentElement.lastChild;
+        pre._args = ['open',''];
+        el.onclick = function() {
+          cssclass.apply(pre, (pre._args=pre._args.reverse()));
+        };
+      })(logs[i]);
+    }
+  </script>
 </html>

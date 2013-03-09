@@ -14,6 +14,10 @@
         font-size: 3em;
         font-weight: 300;
       }
+      h1 a {
+        text-decoration: none;
+        color: black;
+      }
       h2 {
         font-weight: 400;
         margin: 0.4em 0;
@@ -26,7 +30,7 @@
       h3 {
         font-weight: 300;
       }
-      a {
+      h2 a {
         font-style: italic;
         font-weight: 300;
         color: #666;
@@ -81,7 +85,9 @@
     <script>document.createElement('article');</script>
   </head>
   <body>
-    <h1><span class="{{status}}">{{status}}<sub>tinci</sub></span> {{title}}</h1>
+    <h1><a href="./">
+      <span class="{{status}}">{{status}}<sub>tinci</sub></span> {{title}}
+    </a></h1>
     <form method="GET" class="{{config}}">
       Install tinci as GIT post-receive hook?
       <h2>Command</h2>

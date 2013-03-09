@@ -3,12 +3,10 @@
 EMAILS=$(git config --get tinci.emails)
 [ -n "$EMAILS" ] || exit
 
-read input
-REV=$(echo "$input" | cut -d ' ' -f 2)
-LOGFILE=.tinci/$REV.log
+LOGFILE=.tinci/$2.log
 REPO=$(basename `pwd`)
-if [ $1 -eq 0 ];then
-  mail -s "tinci: $REPO build has been broken at revision $REV." $EMAILS < $LOGFILE
+if [ $4 -eq 0 ];then
+  mail -s "tinci: $REPO job has failed at revision $2." $EMAILS < $LOGFILE
 else
-  mail -s "tinci: $REPO build is still failing." $EMAILS < $LOGFILE
+  mail -s "tinci: $REPO job is still failing." $EMAILS < $LOGFILE
 fi

@@ -1,5 +1,5 @@
 #!/bin/sh
-VERSION=0.1.0
+VERSION=0.1.1
 
 BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master

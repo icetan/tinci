@@ -66,18 +66,23 @@ function logs(tincipath) {
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
-      reponame, tincipath, model = {}, logs_, ls, dict, page, data = '';
+      reponame, tincipath, model = {}, logs_, ls, dict, page, data = '?';
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname);
     if (fs.existsSync(path.join(pathname, 'hooks'))) {
       if ('invoke' in url.query) {
         req.on('data', function(chunk) { data += chunk; })
         .on('end', function() {
-          res.writeHead(200);
+          var gitinfo;
+          try {
+            gitinfo = JSON.parse(parse(data, true).query.payload);
+            invokeHook(pathname, gitinfo.before, gitinfo.after, gitinfo.ref);
+            res.writeHead(200);
+          } catch (ex) {
+            res.writeHead(500);
+            console.log('Error on invoke call: '+ex.message);
+          }
           res.end();
-          var json = decodeURIComponent(data.substr(data.indexOf('=')+1)),
-              gitInfo = JSON.parse(json);
-          invokeHook(pathname, gitInfo.before, gitInfo.after, gitInfo.ref);
         });
         return;
       }

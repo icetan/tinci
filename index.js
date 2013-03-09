@@ -87,7 +87,7 @@ http.createServer(function(req, res) {
       pathname = path.resolve(rootpath, './'+url.pathname),
       reponame, tincipath, model = {}, logs_, ls, dict, page, data = '?';
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
-    reponame = path.basename(pathname);
+    reponame = path.basename(pathname, '.git');
     if (fs.existsSync(path.join(pathname, 'hooks'))) {
       if ('invoke' in url.query) {
         req.on('data', function(chunk) { data += chunk; })

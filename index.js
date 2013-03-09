@@ -10,21 +10,24 @@ var fs = require('fs'),
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
     hookpath = require.resolve('./hooks/tinci');
 
-function logExec(cmd) {
+function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
   exec(cmd, function (err, stdout, stderr) {
     console.log(err, stderr);
+    if (callback) callback(err, stdout, stderr);
   });
 }
-function copyHook(to, runner, branch) {
+function copyHook(to, runner, branch, callback) {
   logExec('cp "'+hookpath+'" "'+to+'/hooks/post-receive" && git config -f "'+
     to+'/config" --add tinci.runner "'+runner+'" && git config -f "'+
-    to+'/config" --add tinci.branch "'+branch+'" && mkdir -p "'+to+'/.tinci"');
+    to+'/config" --add tinci.branch "'+branch+'" && mkdir -p "'+to+'/.tinci"',
+  callback);
 }
 
-function invokeHook(to, before, after, ref) {
+function invokeHook(to, before, after, ref, callback) {
   logExec('cd "'+to+'" && git fetch origin '+ref+':'+ref+
-    ' && echo "'+before+' '+after+' '+ref+'"|hooks/post-receive');
+    ' && echo "'+before+' '+after+' '+ref+'"|hooks/post-receive',
+  callback);
 }
 
 function template(model) {
@@ -116,7 +119,16 @@ http.createServer(function(req, res) {
         }).reverse().join('') || model.logs;
       } else {
         if (url.query.runner) {
-          copyHook(pathname, url.query.runner, url.query.branch||'master');
+          copyHook(
+            pathname,
+            url.query.runner,
+            url.query.branch||'master',
+            function () {
+              res.writeHead(302, { 'Location': url.pathname });
+              res.end();
+            }
+          );
+          return;
         } else {
           model.config = 'show';
           model.logs = '';

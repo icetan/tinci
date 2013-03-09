@@ -105,9 +105,6 @@ http.createServer(function(req, res) {
         });
         return;
       }
-      res.writeHead(200, {
-        'Content-Type': 'text/html'
-      });
       model.status = '—';
       model.title = reponame;
       model.logs = "No logs";
@@ -150,6 +147,7 @@ http.createServer(function(req, res) {
           model.logs = '';
         }
       }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(template(model));
     } else {
       res.writeHead(500);

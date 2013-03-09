@@ -8,7 +8,23 @@ var fs = require('fs'),
     rootpath = path.resolve(process.argv[2] || '.'),
     port = parseInt(process.argv[3]) || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
-    hookpath = require.resolve('./hooks/tinci');
+    hookpath = require.resolve('./hooks/tinci'),
+    ansiRe = new RegExp('\033\\[(\\d+)m', 'g');
+
+function colorize(text) {
+  var count = 0;
+  return text.replace(ansiRe, function(_, code) {
+    var res;
+    if (code === '0') {
+      res = new Array(count+1).join('</span>');
+      count = 0;
+    } else {
+      res = '<span class="ansi'+code+'">';
+      count++;
+    }
+    return res;
+  })+new Array(count+1).join('</span>');
+};
 
 function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
@@ -44,7 +60,7 @@ function parseLog(log) {
   log.html = log.html || '<article><h2><span class="' + log.success + '">' +
     log.success + '</span> ' + log.ctime +
     ' <small><a href="?log='+log.rev+'">' + log.rev + '</a></small></h2>' +
-    '<pre>'+lines.slice(0,-2).join('<br>')+'</pre></article>';
+    '<pre>'+colorize(lines.slice(0,-2).join('<br>'))+'</pre></article>';
   return log;
 }
 

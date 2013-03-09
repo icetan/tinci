@@ -1,5 +1,5 @@
 #!/bin/sh
-VERSION=0.0.2
+VERSION=0.0.3
 
 BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master
@@ -12,22 +12,22 @@ BRANCH=$(echo "$REF" | cut -d '/' -f 3)
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
 FAIL=hooks/tinci-fail
-REV=$(echo "$INPUT" | cut -d ' ' -f 2)
-LOGFILE=../$REV.log
+DIR=job.$RANDOM
 mkdir -p .tinci
 cd .tinci
 PREVSTAT=$(tail -n1 `ls -1t | head -n1`)
 [ -n "$PREVSTAT" ] || PREVSTAT=0
-git clone .. -b "$BRANCH" $REV > /dev/null
-cd $REV
+git clone .. -b "$BRANCH" $DIR > /dev/null
+cd $DIR
+LOGFILE=../$(git rev-parse HEAD).log
 echo "=== tinci (v$VERSION) is running '$CMD' ===" | tee $LOGFILE
-{ eval "$CMD" 2>&1; echo "Build exited with code:\n$?"; } | tee -a $LOGFILE
+{ eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
 if [ $(tail -n1 $LOGFILE) -eq 0 ];then
-  [ $PREVSTAT -eq 0 ] && echo "Passed!" || echo "Build fixed!"
+  [ $PREVSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"
   (cd ../..; [ -f "$SUCCESS" ] && echo "$INPUT" | exec "$SUCCESS" $PREVSTATE 2>&1)
 else
-  [ $PREVSTAT -eq 0 ] && echo >&2 "Build broke!" || echo >&2 "Build is still failing!"
+  [ $PREVSTAT -eq 0 ] && echo >&2 "Job failed!" || echo >&2 "Job is still failing!"
   (cd ../..; [ -f "$FAIL" ] && echo "$INPUT" | exec "$FAIL" $PREVSTAT 2>&1)
 fi
 cd ..
-rm -rf $REV
+rm -rf $DIR

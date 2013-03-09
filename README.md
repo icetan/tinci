@@ -4,7 +4,7 @@
 
 ![Screenshot of tinci GUI](https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png)
 
-## tinci vision
+## For the looks
 
 You can setup tinci for a GIT repo and view the build logs over HTTP.
 
@@ -20,6 +20,11 @@ Or.
 $ npm install -g tinci
 $ tinci my/git/repo/dir
 ```
+
+Invoke a fetch and build with WebHooks by doing a HTTP POST
+to ```http://localhost:4567?invoke```. More on [WebHooks and integration with
+GitHub](https://help.github.com/articles/post-receive-hooks).
+
 
 ## Just the hook
 

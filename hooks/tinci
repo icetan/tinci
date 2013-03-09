@@ -15,22 +15,22 @@ FAIL=hooks/tinci-fail
 DIR=job.$RANDOM
 mkdir -p .tinci
 cd .tinci
-PLOGFILE=$(ls -1t | head -n1)
-PREV=$(echo $PLOGFILE | cut -d '.' -f 1)
-PSTAT=$(tail -n1 $PLOGFILE)
+PLOGFILE=$(ls -1t *.log 2>/dev/null | head -n1)
+PREV=$(echo "$PLOGFILE" | cut -d '.' -f 1)
+PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null)
 [ -n "$PSTAT" ] || PSTAT=0
 git clone .. -b "$BRANCH" $DIR > /dev/null
 cd $DIR
-REV=$(git rev-parse HEAD)
+REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
 echo "=== tinci (v$VERSION) is running '$CMD' ===" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
 if [ $(tail -n1 $LOGFILE) -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"
-  (cd ../..; [ -f "$SUCCESS" ] && exec "$SUCCESS" $PREV $REV $REF $PSTAT 2>&1)
+  (cd ../..; [ -f "$SUCCESS" ] && exec "$SUCCESS" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 else
   [ $PSTAT -eq 0 ] && echo >&2 "Job failed!" || echo >&2 "Job is still failing!"
-  (cd ../..; [ -f "$FAIL" ] && exec "$FAIL" $PREV $REV $REF $PSTAT 2>&1)
+  (cd ../..; [ -f "$FAIL" ] && exec "$FAIL" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 fi
 cd ..
 rm -rf $DIR

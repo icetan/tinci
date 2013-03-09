@@ -10,14 +10,21 @@ var fs = require('fs'),
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
     hookpath = require.resolve('./hooks/tinci');
 
-function copyHook(to, runner, branch) {
-  var cmd = 'cp '+hookpath+' '+to+'/hooks/post-receive && git config -f '+
-    to+'/config --add tinci.runner "'+runner+'" && git config -f ' +
-    to+'/config --add tinci.branch "'+branch+'" && mkdir -p '+to+'/.tinci';
-  console.log(cmd);
+function logExec(cmd) {
+  console.log('Execting shell command:', cmd);
   exec(cmd, function (err, stdout, stderr) {
-    console.log(err, stdout, stderr);
+    console.log(err, stderr);
   });
+}
+function copyHook(to, runner, branch) {
+  logExec('cp "'+hookpath+'" "'+to+'/hooks/post-receive" && git config -f "'+
+    to+'/config" --add tinci.runner "'+runner+'" && git config -f "'+
+    to+'/config" --add tinci.branch "'+branch+'" && mkdir -p "'+to+'/.tinci"');
+}
+
+function invokeHook(to, before, after, ref) {
+  logExec('cd "'+to+'" && git fetch origin '+ref+':'+ref+
+    ' && echo "'+before+' '+after+' '+ref+'"|hooks/post-receive');
 }
 
 function template(model) {
@@ -59,12 +66,21 @@ function logs(tincipath) {
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
-      reponame, tincipath, model = {}, logs_, ls, dict, page;
+      reponame, tincipath, model = {}, logs_, ls, dict, page, data = '';
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname);
-    if (fs.existsSync(path.join(pathname, '.git')))
-      pathname = path.join(pathname, '.git');
     if (fs.existsSync(path.join(pathname, 'hooks'))) {
+      if ('invoke' in url.query) {
+        req.on('data', function(chunk) { data += chunk; })
+        .on('end', function() {
+          res.writeHead(200);
+          res.end();
+          var json = decodeURIComponent(data.substr(data.indexOf('=')+1)),
+              gitInfo = JSON.parse(json);
+          invokeHook(pathname, gitInfo.before, gitInfo.after, gitInfo.ref);
+        });
+        return;
+      }
       res.writeHead(200, {
         'Content-Type': 'text/html'
       });
@@ -104,7 +120,7 @@ http.createServer(function(req, res) {
       res.end(template(model));
     } else {
       res.writeHead(500);
-      res.end("Directory not a git repo?");
+      res.end("Directory not a bare git repo?");
     }
   } else {
     res.writeHead(404);

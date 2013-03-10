@@ -1,0 +1,10 @@
+{
+  "title": "{{title}}",
+  "status": "{{status}}",
+  "versions": {
+    "gui": "{{guiVersion}}",
+    "hook": "{{hookVersion}}",
+    "installed": "{{installedVersion}}"
+  },
+  "logs": [{{logs}}]
+}

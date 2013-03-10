@@ -38,15 +38,17 @@
       sup, sub {
         font-size: 0.35em;
       }
-      form {
+      form, form > h3 {
         display: none;
       }
       input[type=text], button {
         font-size: 1em;
-        width: 32em;
+        width: 100%;
         font-weight: 400;
         font-family: sans-serif;
         padding: 0.4em;
+        margin-bottom: 1em;
+        box-sizing: border-box;
       }
       pre {
         margin: 0;
@@ -60,16 +62,21 @@
         border-radius: 5px;
         -webkit-border-radius: 5px;
         -moz-border-radius: 5px;
-        box-shadow: inset 0 0 10px -4px gray;
-        -webkit-box-shadow: inset 0 0 12px -4px gray;
-        -moz-box-shadow: inset 0 0 8px -4px gray;
-        border: 1px solid #e5e5e5;
+        box-shadow: inset 0 0 3px -1px black;
+        -webkit-box-shadow: inset 0 0 5px -1px black;
+        -moz-box-shadow: inset 0 0 3px -1px black;
       }
       form {
         padding: 1.8em;
       }
+      footer {
+        float: right;
+        font-size: 0.7em;
+        color: #666;
+        margin: 3em 0;
+      }
       .show {
-        display: inline-block;
+        display: block;
       }
       .close {
         height: 0;
@@ -82,7 +89,10 @@
         color: #EF4444;
       }
     </style>
-    <script>document.createElement('article');</script>
+    <script>
+      document.createElement('article');
+      document.createElement('footer');
+    </script>
   </head>
   <body>
     <h1><a href="./">
@@ -94,10 +104,13 @@
       <input name="runner" type="text" placeholder="npm install && npm test" />
       <h2>Branch</h2>
       <input name="branch" type="text" placeholder="master" />
-      <h3>Warning: this will overwrite your existing post-receive hook.</h3>
+      <h3 class="{{overwrite}}">
+        Warning: this will overwrite your existing post-receive hook.
+      </h3>
       <button>Install</button>
     </form>
     <div id="logs">{{logs}}</div>
+    <footer>{{versions}}</footer>
   </body>
   <script>
   !function() {

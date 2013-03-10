@@ -9,6 +9,8 @@ var fs = require('fs'),
     port = parseInt(process.argv[3]) || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
     hookpath = require.resolve('./hooks/tinci'),
+    hookVersion = parseHookVersion(hookpath),
+    guiVersion = require('./package.json').version,
     ansiRe = new RegExp('\033\\[(\\d+)m', 'g');
 
 function colorize(text) {
@@ -35,8 +37,8 @@ function logExec(cmd, callback) {
 }
 function copyHook(to, runner, branch, callback) {
   logExec('cp "'+hookpath+'" "'+to+'/hooks/post-receive" && git config -f "'+
-    to+'/config" --add tinci.runner "'+runner+'" && git config -f "'+
-    to+'/config" --add tinci.branch "'+branch+'" && mkdir -p "'+to+'/.tinci"',
+    to+'/config" --replace-all tinci.runner "'+runner+'" && git config -f "'+
+    to+'/config" --replace-all tinci.branch "'+branch+'"',
   callback);
 }
 
@@ -44,6 +46,13 @@ function invokeHook(to, before, after, ref, callback) {
   logExec('cd "'+to+'" && git fetch origin '+ref+':'+ref+
     ' && echo "'+before+' '+after+' '+ref+'"|hooks/post-receive',
   callback);
+}
+
+function parseHookVersion(hookpath) {
+  var m;
+  if (!fs.existsSync(hookpath)) return;
+  m = fs.readFileSync(hookpath, 'utf8').match(/TINCIV=([\d.]+)/);
+  return m !== null ? m[1] : false;
 }
 
 function template(model) {
@@ -65,27 +74,28 @@ function parseLog(log) {
 }
 
 function logs(tincipath) {
-  var dict = {};
-  return {
-    dict: dict,
-    logs: fs.readdirSync(tincipath).filter(function(file){
+  var res = {logs:[], dict:{}};
+  if (fs.existsSync(tincipath)) {
+    res.logs = fs.readdirSync(tincipath).filter(function(file){
       return file.slice(-4) === '.log';
     }).map(function(file) {
       var filepath = path.join(tincipath, file),
           rev = path.basename(file, '.log');
-      return dict[rev] = {
+      return res.dict[rev] = {
         path: filepath,
         rev: rev,
         ctime: fs.statSync(filepath).ctime
       };
-    }).sort(function(a, b){ return a.ctime - b.ctime; })
-  };
+    }).sort(function(a, b){ return a.ctime - b.ctime; });
+  }
+  return res;
 }
 
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
-      reponame, tincipath, model = {}, logs_, ls, dict, page, data = '?';
+      model = {}, data = '?', logs_, ls, dict,
+      page, reponame, tincipath, hookv;
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname, '.git');
     if (fs.existsSync(path.join(pathname, 'hooks'))) {
@@ -105,16 +115,20 @@ http.createServer(function(req, res) {
         });
         return;
       }
-      model.status = '—';
-      model.title = reponame;
-      model.logs = "No logs";
-      tincipath = path.join(pathname, '.tinci');
-      if (fs.existsSync(tincipath)) {
+      hookv = parseHookVersion(path.resolve(pathname, 'hooks', 'post-receive'));
+      model = {
+          status:'—',
+          title: reponame,
+          logs: "No logs",
+          versions: guiVersion+', '+hookVersion
+      };
+      if (hookv) {
+        model.versions += ', '+hookv;
+        tincipath = path.join(pathname, '.tinci');
         logs_ = logs(tincipath);
         ls = logs_.logs;
         dict = logs_.dict;
-        if (ls.length)
-          model.status = parseLog(ls[ls.length-1]).success;
+        if (ls.length) model.status = parseLog(ls[ls.length-1]).success;
         model.logs = (function(){
           if (url.query.log) {
             return [dict[url.query.log]];
@@ -143,6 +157,7 @@ http.createServer(function(req, res) {
           );
           return;
         } else {
+          if (hookv != null) model.overwrite = 'show';
           model.config = 'show';
           model.logs = '';
         }

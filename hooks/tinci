@@ -1,5 +1,5 @@
 #!/bin/sh
-VERSION=0.1.1
+TINCIV=0.1.1
 
 BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master
@@ -23,7 +23,7 @@ git clone .. -b "$BRANCH" $DIR > /dev/null
 cd $DIR
 REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
-echo "=== tinci (v$VERSION) is running '$CMD' ===" | tee $LOGFILE
+echo "=== tinci hook (v$TINCIV) is running '$CMD' ===" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
 if [ $(tail -n1 $LOGFILE) -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"

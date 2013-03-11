@@ -11,7 +11,8 @@ var fs = require('fs'),
     hookpath = require.resolve('./hooks/tinci'),
     hookVersion = parseHookVersion(hookpath),
     guiVersion = require('./package.json').version,
-    ansiRe = new RegExp('\033\\[(\\d+)m', 'g');
+    ansiRe = new RegExp('\033\\[(\\d+)m', 'g'),
+    statusChars = ['✓', '✗', '—'];
 
 function colorize(text) {
   var count = 0;
@@ -61,15 +62,19 @@ function template(model) {
   return html;
 }
 
-function parseLog(log) {
-  var lines = fs.readFileSync(log.path, 'utf8').trim().split('\n'),
-      exitcode = lines.slice(-1)[0],
-      success = /^\d+$/.test(exitcode) ? (exitcode === '0') : undefined;
-  log.success = success ? '✓' : (success != null ? '✗' : '—');
-  log.html = log.html || '<article><h2><span class="' + log.success + '">' +
-    log.success + '</span> ' + log.ctime +
+function logToHtml(log) {
+  return '<article><h2><span class="' + statusChars[log.status] + '">' +
+    statusChars[log.status] + '</span> ' + log.ctime +
     ' <small><a href="?log='+log.rev+'">' + log.rev + '</a></small></h2>' +
-    '<pre>'+colorize(lines.slice(0,-2).join('<br>'))+'</pre></article>';
+    '<pre>'+colorize(log.log.replace(/\r?\n/g, '<br>'))+'</pre></article>';
+}
+
+function parseLog(log) {
+  if (!log.log) {
+    log.log = fs.readFileSync(log.path, 'utf8').trim(),
+    log.exitcode = log.log.substr(log.log.lastIndexOf('\n')+1),
+    log.status = /^\d+$/.test(log.exitcode) ? (log.exitcode==='0' ? 0 : 1) : 2;
+  }
   return log;
 }
 
@@ -94,6 +99,7 @@ function logs(tincipath) {
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
+      format = url.query.format || 'html',
       model = {}, data = '?', logs_, ls, dict,
       page, reponame, tincipath, hookv;
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
@@ -117,18 +123,18 @@ http.createServer(function(req, res) {
       }
       hookv = parseHookVersion(path.resolve(pathname, 'hooks', 'post-receive'));
       model = {
-          status:'—',
           title: reponame,
-          logs: "No logs",
-          versions: guiVersion+', '+hookVersion
+          status: 2,
+          logs: [],
+          versions: [guiVersion, hookVersion]
       };
       if (hookv) {
-        model.versions += ', '+hookv;
+        model.versions.push(hookv);
         tincipath = path.join(pathname, '.tinci');
         logs_ = logs(tincipath);
         ls = logs_.logs;
         dict = logs_.dict;
-        if (ls.length) model.status = parseLog(ls[ls.length-1]).success;
+        if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
         model.logs = (function(){
           if (url.query.log) {
             return [dict[url.query.log]];
@@ -141,9 +147,7 @@ http.createServer(function(req, res) {
                 : parseInt(page[0])+(parseInt(page[1])||10)
             );
           }
-        })().map(function(log) {
-          return log ? parseLog(log).html : '';
-        }).reverse().join('') || model.logs;
+        })().map(function(log) { return parseLog(log); }).reverse();
       } else {
         if (url.query.runner) {
           copyHook(
@@ -159,11 +163,19 @@ http.createServer(function(req, res) {
         } else {
           if (hookv != null) model.overwrite = 'show';
           model.config = 'show';
-          model.logs = '';
         }
       }
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(template(model));
+      if (format === 'html') {
+        model.status = statusChars[model.status];
+        model.logs = model.logs.map(function(log) {
+          return log ? logToHtml(log) : '';
+        }).join('');
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(template(model));
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(model));
+      }
     } else {
       res.writeHead(500);
       res.end("Directory not a bare git repo?");

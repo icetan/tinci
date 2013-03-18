@@ -12,7 +12,7 @@
     "url": "https://raw.github.com/icetan/tinci/master/LICENSE"
   }],
   "engines": {
-    "node": "~0.8.0"
+    "node": ">=0.8.0"
   },
   "bin": {
     "tinci": "./index.js"

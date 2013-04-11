@@ -24,8 +24,8 @@ git clone .. -b "$BRANCH" $DIR > /dev/null
 cd $DIR
 REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
-echo -e "# tinci $TINCIV\n# branch $BRANCH\n# running $CMD" | tee $LOGFILE
-{ eval "$CMD" 2>&1; echo -e "Job exited with code:\n$?"; } | tee -a $LOGFILE
+echo "# tinci $TINCIV\n# branch $BRANCH\n# running $CMD" | tee $LOGFILE
+{ eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
 STAT=$(tail -n1 $LOGFILE)
 if [ $STAT -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"

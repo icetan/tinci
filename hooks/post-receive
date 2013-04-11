@@ -1,5 +1,5 @@
 #!/bin/sh
-TINCIV=0.1.3
+TINCIV=0.2.0
 
 BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master
@@ -12,6 +12,7 @@ BRANCH=$(echo "$REF" | cut -d '/' -f 3)
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
 FAIL=hooks/tinci-fail
+HOOK=hooks/tinci
 DIR=job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
 mkdir -p .tinci
 cd .tinci
@@ -25,12 +26,14 @@ REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
 echo "=== tinci hook (v$TINCIV) is running '$CMD' ===" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
-if [ $(tail -n1 $LOGFILE) -eq 0 ];then
+STAT=$(tail -n1 $LOGFILE)
+if [ $STAT -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"
   (cd ../..; [ -f "$SUCCESS" ] && exec "$SUCCESS" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 else
   [ $PSTAT -eq 0 ] && echo >&2 "Job failed!" || echo >&2 "Job is still failing!"
   (cd ../..; [ -f "$FAIL" ] && exec "$FAIL" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 fi
+(cd ../..; [ -f "$HOOK" ] && exec "$HOOK" "$PREV" "$REV" "$REF" "$PSTAT" "$STAT" 2>&1)
 cd ..
 rm -rf $DIR

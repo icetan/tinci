@@ -71,8 +71,8 @@ function logToHtml(log) {
 
 function parseLog(log) {
   if (!log.log) {
-    log.log = fs.readFileSync(log.path, 'utf8').trim(),
-    log.exitcode = log.log.substr(log.log.lastIndexOf('\n')+1),
+    log.log = fs.readFileSync(log.path, 'utf8').trim();
+    log.exitcode = log.log.slice(log.log.lastIndexOf('\n')+1).split(' ').slice(-1)[0];
     log.status = /^\d+$/.test(log.exitcode) ? (log.exitcode==='0' ? 0 : 1) : 2;
   }
   return log;

@@ -1,5 +1,5 @@
 #!/bin/sh
-TINCIV=0.2.0
+TINCIV=0.3.0
 
 BRANCH=$(git config --get tinci.branch)
 [ -n "$BRANCH" ] || BRANCH=master
@@ -18,20 +18,20 @@ mkdir -p .tinci
 cd .tinci
 PLOGFILE=$(ls -1t *.log 2>/dev/null | head -n1)
 PREV=$(echo "$PLOGFILE" | cut -d '.' -f 1)
-PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null)
+PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
 [ -n "$PSTAT" ] || PSTAT=0
 git clone .. -b "$BRANCH" $DIR > /dev/null
 cd $DIR
 REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
 echo "# tinci $TINCIV\n# branch $BRANCH\n# running $CMD" | tee $LOGFILE
-{ eval "$CMD" 2>&1; echo "Job exited with code:\n$?"; } | tee -a $LOGFILE
-STAT=$(tail -n1 $LOGFILE)
+{ eval "$CMD" 2>&1; echo "# code $?"; } | tee -a $LOGFILE
+STAT=$(tail -n1 $LOGFILE | sed -nE 's/^# code ([0-9]+)$/\1/p')
 if [ $STAT -eq 0 ];then
-  [ $PSTAT -eq 0 ] && echo "Job successful!" || echo "Job fixed!"
+  [ $PSTAT -eq 0 ] && echo "\nJob successful!" || echo "\nJob fixed!"
   (cd ../..; [ -f "$SUCCESS" ] && exec "$SUCCESS" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 else
-  [ $PSTAT -eq 0 ] && echo >&2 "Job failed!" || echo >&2 "Job is still failing!"
+  [ $PSTAT -eq 0 ] && echo >&2 "\nJob failed!" || echo >&2 "\nJob is still failing!"
   (cd ../..; [ -f "$FAIL" ] && exec "$FAIL" "$PREV" "$REV" "$REF" "$PSTAT" 2>&1)
 fi
 (cd ../..; [ -f "$HOOK" ] && exec "$HOOK" "$PREV" "$REV" "$REF" "$PSTAT" "$STAT" 2>&1)

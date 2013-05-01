@@ -28,30 +28,32 @@
         </ul>
       </header>
       <section>
-        <p><img src="https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png" alt="Screenshot of tinci GUI"></p>
+        <h1>tinci</h1>
+
+<p><em>TINy Continuous Integration script for use with Git hooks</em></p>
+
+<p><img src="https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png" alt="Screenshot of tinci GUI"></p>
 
 <h2>For the looks</h2>
 
-<p>You can setup tinci for a GIT repo and view the build logs over HTTP.</p>
+<p>You can setup tinci for a bare Git repo and view the build logs over HTTP.</p>
 
-<pre><code>$ git clone git://github.com/icetan/tinci
-$ node tinci/index.js my/git/repo/dir
+<pre><code>$ npm install -g tinci
+$ tinci my/project.git/
 $ open http://localhost:4567
 </code></pre>
 
-<p>Or.</p>
-
-<pre><code>$ npm install -g tinci
-$ tinci my/git/repo/dir
-</code></pre>
+<p>Invoke a fetch and build with WebHooks by doing a HTTP POST
+to <code>http://localhost:4567?invoke</code>. More on <a href="https://help.github.com/articles/post-receive-hooks">WebHooks and integration with
+GitHub</a>.</p>
 
 <h2>Just the hooks</h2>
 
-<p>If you don't want the GUI then you can just copy the hook script to your GIT
-repo.</p>
+<p>If you don't want the GUI then you can just copy the hook script to your Git
+repo manualy.</p>
 
-<pre><code>$ cp tinci/hooks/tinci my/.git/hooks/post-receive
-$ git config -f my/.git/config --add tinci.runner "make test"
+<pre><code>$ cp tinci/hooks/post-receive project.git/hooks/
+$ git config -f project.git/config --add tinci.runner "make test"
 </code></pre>
 
 <p>tinci will now run the shell command 'make test' each time someone pushes to
@@ -59,8 +61,26 @@ your repos master branch.</p>
 
 <p>To run tinci on another branch.</p>
 
-<pre><code>$ git config -f my/.git/config --add tinci.branch my-feature
+<pre><code>$ git config -f project.git/config --add tinci.branch my-feature
 </code></pre>
+
+<p>tinci will execute its own hooks on completion of a job. Place executable files
+in your repos <code>hooks</code> directory with the name <code>tinci</code>, <code>tinci-success</code> or
+<code>tinci-fail</code>.</p>
+
+<p>Each hook will be called with the following parameters:</p>
+
+<ol>
+<li>last job Git revision</li>
+<li>current Git revision</li>
+<li>current Git refs</li>
+<li>last job exit code</li>
+<li>current exit code</li>
+</ol><p>The <code>tinci</code> hook will be called on all completed jobs. <code>tinci-success</code> is only
+called on a job that exits with a zero and <code>tinci-fail</code> will only be called
+when a job exits with non-zero.</p>
+
+<p>Here is a sample <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample">fail hook</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/icetan">icetan</a></p>

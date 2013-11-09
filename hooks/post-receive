@@ -1,39 +1,44 @@
 #!/bin/sh
-TINCIV=0.3.1
+TINCIV=1.0.0
 
-BRANCH=$(git config --get tinci.branch)
-[ -n "$BRANCH" ] || BRANCH=master
+MATCH=$(git config --get tinci.match)
+[ -n "$MATCH" ] || MATCH=$(git config --get tinci.branch)
+[ -n "$MATCH" ] || MATCH=master
 
 read INPUT
+#REV=$(git rev-parse $REF 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
+REV=$(echo "$INPUT" | cut -d ' ' -f 2)
 REF=$(echo "$INPUT" | cut -d ' ' -f 3)
-[ -n "$(echo "$REF" | grep -E "^refs/heads/($BRANCH)$")" ] || exit
-BRANCH=$(echo "$REF" | cut -d '/' -f 3)
+[ -n "$(echo "$REF" | grep -E "^refs/(heads|tags)/($MATCH)$")" ] || exit
 
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
 FAIL=hooks/tinci-fail
 HOOK=hooks/tinci
-DIR=job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
-mkdir -p .tinci
-cd .tinci
-PLOGFILE=$(ls -1t *.log 2>/dev/null | head -n1)
+WORK=.tinci
+mkdir -p $WORK
+PLOGFILE=$(ls -1t $WORK/*.log 2>/dev/null | head -n1)
 PREV=$(echo "$PLOGFILE" | cut -d '.' -f 1)
 PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
 [ -n "$PSTAT" ] || PSTAT=0
-git clone .. -b "$BRANCH" $DIR > /dev/null
+DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
+mkdir -p $DIR
+git archive "$REF" | tar -x -C "$DIR"
 cd $DIR
-REV=$(git rev-parse HEAD 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 LOGFILE=../$REV.log
-echo "# tinci $TINCIV\n# branch $BRANCH\n# running $CMD" | tee $LOGFILE
+echo "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "# code $?"; } | tee -a $LOGFILE
 STAT=$(tail -n1 $LOGFILE | sed -nE 's/^# code ([0-9]+)$/\1/p')
+cd ../..
 if [ $STAT -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "\nJob successful!" || echo "\nJob fixed!"
-  (cd ../..; [ -f "$SUCCESS" ] && exec "$SUCCESS" "$PREV" "$REV" "$REF" "$PSTAT" "$STAT" 2>&1)
+  [ -f "$SUCCESS" ] && \
+    echo $INPUT | exec "$SUCCESS" "$PSTAT" "$STAT" "$DIR" 2>&1
 else
   [ $PSTAT -eq 0 ] && echo >&2 "\nJob failed!" || echo >&2 "\nJob is still failing!"
-  (cd ../..; [ -f "$FAIL" ] && exec "$FAIL" "$PREV" "$REV" "$REF" "$PSTAT" "$STAT" 2>&1)
+  [ -f "$FAIL" ] && \
+    echo $INPUT | exec "$FAIL" "$PSTAT" "$STAT" "$DIR" 2>&1
 fi
-(cd ../..; [ -f "$HOOK" ] && exec "$HOOK" "$PREV" "$REV" "$REF" "$PSTAT" "$STAT" 2>&1)
-cd ..
+[ -f "$HOOK" ] && \
+  echo $INPUT | exec "$HOOK" "$PSTAT" "$STAT" "$DIR" 2>&1
 rm -rf $DIR

@@ -54,6 +54,9 @@
         margin: 0;
         overflow-y: auto;
       }
+      em {
+        color: #666;
+      }
       article, form {
         cursor: pointer;
         padding: 0.8em 0.8em 1em;
@@ -101,18 +104,22 @@
       <span class="{{status}}">{{status}}<sub>tinci</sub></span> {{title}}
     </a></h1>
     <form method="GET" class="{{config}}">
-      Install tinci as GIT post-receive hook?
       <h2>Command</h2>
-      <input name="runner" type="text" placeholder="npm install && npm test" />
-      <h2>Ref match (use regex ex. ".*" to match all refs)</h2>
-      <input name="match" type="text" placeholder="master" />
+      <input name="runner" type="text" placeholder="npm install && npm test">
+      <h2>Ref Match</h2>
+      <p><em>Use regex ex.</em> ".*" <em>to match all refs</em></p>
+      <input name="match" type="text" placeholder="master">
       <h3 class="{{overwrite}}">
         Warning: this will overwrite your existing post-receive hook.
       </h3>
+      <p>Install tinci as GIT post-receive hook?</p>
+      <input name="update" type="hidden">
       <button>Install</button>
     </form>
     <div id="logs">{{logs}}</div>
-    <footer>{{versions}}</footer>
+    <footer>
+      gui:v{{guiVersion}}, current:v{{hookVersion}}, installed:v{{installedVersion}}
+    </footer>
   </body>
   <script>
   !function() {

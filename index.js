@@ -132,10 +132,27 @@ http.createServer(function(req, res) {
           title: reponame,
           status: 2,
           logs: [],
-          versions: [guiVersion, hookVersion]
+          guiVersion: guiVersion,
+          hookVersion: hookVersion,
+          installedVersion: hookv
       };
-      if (hookv) {
-        model.versions.push(hookv);
+      if ('update' in url.query) {
+        if (url.query.runner) {
+          copyHook(
+            pathname,
+            url.query.runner,
+            url.query.match||'master',
+            function () {
+              res.writeHead(302, { 'Location': url.pathname });
+              res.end();
+            }
+          );
+          return;
+        } else {
+          if (hookv != null) model.overwrite = 'show';
+          model.config = 'show';
+        }
+      } else if (hookv) {
         tincipath = path.join(pathname, '.tinci');
         logs_ = logs(tincipath);
         ls = logs_.logs;
@@ -155,21 +172,9 @@ http.createServer(function(req, res) {
           }
         })().map(function(log) { return parseLog(log); }).reverse();
       } else {
-        if (url.query.runner) {
-          copyHook(
-            pathname,
-            url.query.runner,
-            url.query.match||'master',
-            function () {
-              res.writeHead(302, { 'Location': url.pathname });
-              res.end();
-            }
-          );
-          return;
-        } else {
-          if (hookv != null) model.overwrite = 'show';
-          model.config = 'show';
-        }
+        res.writeHead(302, { 'Location': url.pathname+'?update' });
+        res.end();
+        return;
       }
       if (format === 'html') {
         model.status = statusChars[model.status];

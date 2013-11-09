@@ -36,10 +36,10 @@ function logExec(cmd, callback) {
     if (callback) callback(err, stdout, stderr);
   });
 }
-function copyHook(to, runner, branch, callback) {
+function copyHook(to, runner, match, callback) {
   logExec('cp "'+hookpath+'" "'+to+'/hooks/post-receive" && git config -f "'+
     to+'/config" --replace-all tinci.runner "'+runner+'" && git config -f "'+
-    to+'/config" --replace-all tinci.branch "'+branch+'"',
+    to+'/config" --replace-all tinci.match "'+match+'"',
   callback);
 }
 
@@ -153,7 +153,7 @@ http.createServer(function(req, res) {
           copyHook(
             pathname,
             url.query.runner,
-            url.query.branch||'master',
+            url.query.match||'master',
             function () {
               res.writeHead(302, { 'Location': url.pathname });
               res.end();

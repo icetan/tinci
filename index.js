@@ -14,6 +14,10 @@ var fs = require('fs'),
     ansiRe = new RegExp('\033\\[(\\d+)m', 'g'),
     statusChars = ['✓', '✗', '—'];
 
+function esc(str) {
+  return str.replace(/'/g, '"');
+}
+
 function colorize(text) {
   var count = 0;
   return text.replace(ansiRe, function(_, code) {
@@ -37,15 +41,17 @@ function logExec(cmd, callback) {
   });
 }
 function copyHook(to, runner, match, callback) {
-  logExec('cp "'+hookpath+'" "'+to+'/hooks/post-receive" && git config -f "'+
-    to+'/config" --replace-all tinci.runner "'+runner+'" && git config -f "'+
-    to+'/config" --replace-all tinci.match "'+match+'"',
+  var eto = esc(to), er = esc(runner), em = esc(match);
+  logExec("cp '"+esc(hookpath)+"' '"+eto+"/hooks/post-receive' && "+
+    "git config -f '"+eto+"/config' --replace-all tinci.runner '"+er+"' && "+
+    "git config -f '"+eto+"/config' --replace-all tinci.match '"+em+"'",
   callback);
 }
 
 function invokeHook(to, before, after, ref, callback) {
-  logExec('cd "'+to+'" && git fetch origin '+ref+':'+ref+
-    ' && echo "'+before+' '+after+' '+ref+'"|hooks/post-receive',
+  var eref = esc(ref);
+  logExec("cd '"+esc(to)+"' && git fetch origin '"+eref+":"+eref+"' && "+
+    "echo '"+esc(before+" "+after+" "+ref)+"' | hooks/post-receive",
   callback);
 }
 

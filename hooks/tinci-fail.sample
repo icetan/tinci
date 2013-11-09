@@ -10,7 +10,7 @@ EMAILS=$(git config --get tinci.emails)
 [ -n "$EMAILS" ] || exit
 
 read INPUT
-REV=$(echo "$INPUT" | cut -d ' ' -f 2)
+REV=$(echo "$INPUT" | cut -d ' ' -f 2 | head -c 10)
 REF=$(echo "$INPUT" | cut -d ' ' -f 3 | grep -o '[^\/]*$')
 
 LOGFILE=.tinci/$REV.log

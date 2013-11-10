@@ -18,6 +18,10 @@ function esc(str) {
   return str.replace(/'/g, '"');
 }
 
+function fdate(d) {
+  return d.toDateString() + ' ' + d.toLocaleTimeString();
+}
+
 function colorize(text) {
   var count = 0;
   return text.replace(ansiRe, function(_, code) {
@@ -70,14 +74,17 @@ function template(model) {
 
 function logToHtml(log) {
   return '<article><h2><span class="' + statusChars[log.status] + '">' +
-    statusChars[log.status] + '</span> ' + log.ctime +
-    ' <small><a href="?log='+log.rev+'">' + log.rev + '</a></small></h2>' +
-    '<pre>'+colorize(log.log.replace(/\r?\n/g, '<br>'))+'</pre></article>';
+    statusChars[log.status] + '</span> ' + log.ref +
+    ' <small>'+ fdate(log.ctime) + ' <a href="?log='+log.rev+'">' + log.rev +
+    '</a></small></h2>' + '<pre>' +
+    colorize(log.log.replace(/\r?\n/g, '<br>')) + '</pre></article>';
 }
 
 function parseLog(log) {
+  var refm;
   if (!log.log) {
     log.log = fs.readFileSync(log.path, 'utf8').trim();
+    log.ref = (refm = /# ref refs\/(?:heads|tags)\/(.*)/.exec(log.log), refm ? refm[1] : '');
     log.exitcode = log.log.slice(log.log.lastIndexOf('\n')+1).split(' ').slice(-1)[0];
     log.status = /^\d+$/.test(log.exitcode) ? (log.exitcode==='0' ? 0 : 1) : 2;
   }

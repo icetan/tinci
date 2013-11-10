@@ -61,4 +61,4 @@ when a job exits with non-zero.
 These hooks are compatible with `post-receive`, in other words each script will
 be called with the same `stdin` value as the `post-receive` was.
 
-Here is a sample [fail hook](https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample).
+Here is a sample [fail hook for sending e-mail](https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample) and a [success hook which syncs files to Amazon S3](https://raw.github.com/icetan/tinci/master/hooks/tinci-success.sample).

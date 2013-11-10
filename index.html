@@ -28,13 +28,15 @@
         </ul>
       </header>
       <section>
-        <h1>tinci</h1>
+        <h1>
+<a name="tinci" class="anchor" href="#tinci"><span class="octicon octicon-link"></span></a>tinci</h1>
 
 <p><em>TINy Continuous Integration script for use with Git hooks</em></p>
 
 <p><img src="https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png" alt="Screenshot of tinci GUI"></p>
 
-<h2>For the looks</h2>
+<h2>
+<a name="for-the-looks" class="anchor" href="#for-the-looks"><span class="octicon octicon-link"></span></a>For the looks</h2>
 
 <p>You can setup tinci for a bare Git repo and view the build logs over HTTP.</p>
 
@@ -47,7 +49,8 @@ $ open http://localhost:4567
 to <code>http://localhost:4567?invoke</code>. More on <a href="https://help.github.com/articles/post-receive-hooks">WebHooks and integration with
 GitHub</a>.</p>
 
-<h2>Just the hooks</h2>
+<h2>
+<a name="just-the-hooks" class="anchor" href="#just-the-hooks"><span class="octicon octicon-link"></span></a>Just the hooks</h2>
 
 <p>If you don't want the GUI then you can just copy the hook script to your Git
 repo manualy.</p>
@@ -59,28 +62,32 @@ $ git config -f project.git/config --add tinci.runner "make test"
 <p>tinci will now run the shell command 'make test' each time someone pushes to
 your repos master branch.</p>
 
-<p>To run tinci on another branch.</p>
+<p>To run tinci on another branch or tag.</p>
 
-<pre><code>$ git config -f project.git/config --add tinci.branch my-feature
+<pre><code>$ git config -f project.git/config --add tinci.match my-feature
 </code></pre>
+
+<p>The <code>tinci.match</code> setting uses regexp so you can specify tinci to run on all
+pushes by giving the value <code>.*</code>.</p>
 
 <p>tinci will execute its own hooks on completion of a job. Place executable files
 in your repos <code>hooks</code> directory with the name <code>tinci</code>, <code>tinci-success</code> or
 <code>tinci-fail</code>.</p>
 
-<p>Each hook will be called with the following parameters:</p>
+<p>Each hook script will be called with the following arguments:</p>
 
 <ol>
-<li>last job Git revision</li>
-<li>current Git revision</li>
-<li>current Git refs</li>
 <li>last job exit code</li>
 <li>current exit code</li>
+<li>path to work directory</li>
 </ol><p>The <code>tinci</code> hook will be called on all completed jobs. <code>tinci-success</code> is only
 called on a job that exits with a zero and <code>tinci-fail</code> will only be called
 when a job exits with non-zero.</p>
 
-<p>Here is a sample <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample">fail hook</a>.</p>
+<p>These hooks are compatible with <code>post-receive</code>, in other words each script will
+be called with the same <code>stdin</code> value as the <code>post-receive</code> was.</p>
+
+<p>Here is a sample <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample">fail hook for sending e-mail</a> and a <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-success.sample">success hook which syncs files to Amazon S3</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/icetan">icetan</a></p>

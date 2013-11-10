@@ -190,6 +190,9 @@ http.createServer(function(req, res) {
         }).join('');
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(template(model));
+      } else if (url.query.log && format === 'text') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end(model.logs[0].log);
       } else {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(model));

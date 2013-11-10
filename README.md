@@ -35,26 +35,30 @@ $ git config -f project.git/config --add tinci.runner "make test"
 tinci will now run the shell command 'make test' each time someone pushes to
 your repos master branch.
 
-To run tinci on another branch.
+To run tinci on another branch or tag.
 
 ```
-$ git config -f project.git/config --add tinci.branch my-feature
+$ git config -f project.git/config --add tinci.match my-feature
 ```
+
+The `tinci.match` setting uses regexp so you can specify tinci to run on all
+pushes by giving the value `.*`.
 
 tinci will execute its own hooks on completion of a job. Place executable files
 in your repos `hooks` directory with the name `tinci`, `tinci-success` or
 `tinci-fail`.
 
-Each hook will be called with the following parameters:
+Each hook script will be called with the following arguments:
 
-1. last job Git revision
-1. current Git revision
-1. current Git refs
 1. last job exit code
 1. current exit code
+1. path to work directory
 
 The `tinci` hook will be called on all completed jobs. `tinci-success` is only
 called on a job that exits with a zero and `tinci-fail` will only be called
 when a job exits with non-zero.
+
+These hooks are compatible with `post-receive`, in other words each script will
+be called with the same `stdin` value as the `post-receive` was.
 
 Here is a sample [fail hook](https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample).

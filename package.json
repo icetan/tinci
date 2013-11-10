@@ -1,16 +1,18 @@
 {
   "name": "tinci",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "TINy Continuous Integration script for use with GIT hooks",
   "author": "Christopher Fredén <c.freden@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/icetan/tinci.git"
   },
-  "licenses": [{
-    "type": "MIT",
-    "url": "https://raw.github.com/icetan/tinci/master/LICENSE"
-  }],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/icetan/tinci/master/LICENSE"
+    }
+  ],
   "engines": {
     "node": ">=0.8.0"
   },

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Sync a directory from your project with an S3 bucket on successful build.
+#
+# Configure which S3 bucket to sync with:
+# $ git config --add tinci.s3bucket my-little-bucket
+
+S3BUCKET=$(git config --get tinci.s3bucket)
+[ -n "$S3BUCKET" ] || exit
+
+aws s3 sync $3/www s3://$S3BUCKET

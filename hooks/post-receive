@@ -23,7 +23,7 @@ PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
 [ -n "$PSTAT" ] || PSTAT=0
 DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
 mkdir -p $DIR
-git archive "$REF" | tar -x -C "$DIR"
+git archive "$REV" | tar -x -C "$DIR"
 cd $DIR
 LOGFILE=../$REV.log
 echo "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee $LOGFILE

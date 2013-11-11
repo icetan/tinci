@@ -6,7 +6,7 @@ var fs = require('fs'),
     http = require('http'),
     exec = require('child_process').exec,
     rootpath = path.resolve(process.argv[2] || '.'),
-    port = parseInt(process.argv[3]) || 4567,
+    port = parseInt(process.argv[3]) || process.env.PORT || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
     hookpath = require.resolve('./hooks/post-receive'),
     hookVersion = parseHookVersion(hookpath),
@@ -207,4 +207,4 @@ http.createServer(function(req, res) {
   }
 }).listen(port);
 
-console.log('tinci vision at http://localhost:'+port+'/your/git/repo');
+console.log('tinci vision at http://localhost:'+port);

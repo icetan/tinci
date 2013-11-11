@@ -1,15 +1,15 @@
 #!/bin/sh
-TINCIV=1.0.0
+TINCIV=1.1.0
 
 MATCH=$(git config --get tinci.match)
 [ -n "$MATCH" ] || MATCH=$(git config --get tinci.branch)
 [ -n "$MATCH" ] || MATCH=master
 
 read INPUT
-#REV=$(git rev-parse $REF 2>/dev/null || echo "$INPUT" | cut -d ' ' -f 2)
 REV=$(echo "$INPUT" | cut -d ' ' -f 2)
 REF=$(echo "$INPUT" | cut -d ' ' -f 3)
-[ -n "$(echo "$REF" | grep -E "^refs/(heads|tags)/($MATCH)$")" ] || exit
+SHORTREF=$(echo "$REF" | grep -o "[^/]*$")
+echo "$SHORTREF" | grep -E "^($MATCH)$" || exit
 
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
@@ -41,4 +41,6 @@ else
 fi
 [ -f "$HOOK" ] && \
   echo $INPUT | exec "$HOOK" "$PSTAT" "$STAT" "$DIR" 2>&1
+[ -f "$HOOK-$SHORTREF" ] && \
+  echo $INPUT | exec "$HOOK-$SHORTREF" "$PSTAT" "$STAT" "$DIR" 2>&1
 rm -rf $DIR

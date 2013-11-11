@@ -1,5 +1,5 @@
 #!/bin/sh
-TINCIV=1.1.0
+TINCIV=1.2.0
 
 MATCH=$(git config --get tinci.match)
 [ -n "$MATCH" ] || MATCH=$(git config --get tinci.branch)
@@ -33,14 +33,14 @@ cd ../..
 if [ $STAT -eq 0 ];then
   [ $PSTAT -eq 0 ] && echo "\nJob successful!" || echo "\nJob fixed!"
   [ -f "$SUCCESS" ] && \
-    echo $INPUT | exec "$SUCCESS" "$PSTAT" "$STAT" "$DIR" 2>&1
+    echo $INPUT | exec "$SUCCESS" "$DIR" "$STAT" "$PSTAT" 2>&1
 else
   [ $PSTAT -eq 0 ] && echo >&2 "\nJob failed!" || echo >&2 "\nJob is still failing!"
   [ -f "$FAIL" ] && \
-    echo $INPUT | exec "$FAIL" "$PSTAT" "$STAT" "$DIR" 2>&1
+    echo $INPUT | exec "$FAIL" "$DIR" "$STAT" "$PSTAT" 2>&1
 fi
 [ -f "$HOOK" ] && \
-  echo $INPUT | exec "$HOOK" "$PSTAT" "$STAT" "$DIR" 2>&1
+  echo $INPUT | exec "$HOOK" "$DIR" "$STAT" "$PSTAT" 2>&1
 [ -f "$HOOK-$SHORTREF" ] && \
-  echo $INPUT | exec "$HOOK-$SHORTREF" "$PSTAT" "$STAT" "$DIR" 2>&1
+  echo $INPUT | exec "$HOOK-$SHORTREF" "$DIR" "$STAT" "$PSTAT" 2>&1
 rm -rf $DIR

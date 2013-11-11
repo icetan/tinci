@@ -15,7 +15,7 @@ REF=$(echo "$INPUT" | cut -d ' ' -f 3 | grep -o '[^\/]*$')
 
 LOGFILE=.tinci/$REV.log
 REPO=$(basename `pwd`)
-if [ $1 -eq 0 ];then
+if [ $3 -eq 0 ];then
   mail -s "tinci: $REPO ($REF) job has failed at ${REV}" $EMAILS < $LOGFILE
 else
   mail -s "tinci: $REPO ($REF) job is still failing" $EMAILS < $LOGFILE

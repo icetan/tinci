@@ -71,23 +71,33 @@ your repos master branch.</p>
 pushes by giving the value <code>.*</code>.</p>
 
 <p>tinci will execute its own hooks on completion of a job. Place executable files
-in your repos <code>hooks</code> directory with the name <code>tinci</code>, <code>tinci-success</code> or
-<code>tinci-fail</code>.</p>
+in your repos <code>hooks</code> directory with the name <code>tinci</code>, <code>tinci-&lt;branch&gt;</code>,
+<code>tinci-success</code> or <code>tinci-fail</code>.</p>
 
 <p>Each hook script will be called with the following arguments:</p>
 
 <ol>
-<li>last job exit code</li>
-<li>current exit code</li>
 <li>path to work directory</li>
-</ol><p>The <code>tinci</code> hook will be called on all completed jobs. <code>tinci-success</code> is only
-called on a job that exits with a zero and <code>tinci-fail</code> will only be called
-when a job exits with non-zero.</p>
+<li>current job's exit code</li>
+<li>last job's exit code</li>
+</ol><p>The <code>tinci</code> and <code>tinci-&lt;branch&gt;</code> hooks will be called on all completed jobs.
+<code>tinci-success</code> is only called on a job that exits with a zero and <code>tinci-fail</code>
+will only be called when a job exits with non-zero.</p>
+
+<p><code>&lt;branch&gt;</code> in <code>tinci-&lt;branch&gt;</code> will be replaced with the current short ref name
+of the current job.</p>
+
+<p>Example: <code>git push origin master:deploy</code> till trigger a
+tinci job on the <code>deploy</code> branch on <code>origin</code> and will look for and execute a
+hook script with the name <code>tinci-deploy</code>.</p>
 
 <p>These hooks are compatible with <code>post-receive</code>, in other words each script will
 be called with the same <code>stdin</code> value as the <code>post-receive</code> was.</p>
 
-<p>Here is a sample <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample">fail hook for sending e-mail</a> and a <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-success.sample">success hook which syncs files to Amazon S3</a>.</p>
+<p>Here is a sample <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample">fail hook for sending
+e-mail</a> and
+a <a href="https://raw.github.com/icetan/tinci/master/hooks/tinci-deploy.sample">hook which syncs files on <code>deploy</code> branch to Amazon
+S3</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/icetan">icetan</a></p>

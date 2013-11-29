@@ -1,15 +1,15 @@
 #!/bin/sh
-TINCIV=1.2.0
+TINCIV=1.3.0
 
 MATCH=$(git config --get tinci.match)
 [ -n "$MATCH" ] || MATCH=$(git config --get tinci.branch)
 [ -n "$MATCH" ] || MATCH=master
 
-read INPUT
-REV=$(echo "$INPUT" | cut -d ' ' -f 2)
-REF=$(echo "$INPUT" | cut -d ' ' -f 3)
+while read OLDSHA NEWSHA REF ; do
+
 SHORTREF=$(echo "$REF" | grep -o "[^/]*$")
-echo "$SHORTREF" | grep -E "^($MATCH)$" || exit
+echo "$SHORTREF" | grep -E "^($MATCH)$" || continue
+INPUT="$OLDSHA $NEWSHA $REF"
 
 CMD=$(git config --get tinci.runner)
 SUCCESS=hooks/tinci-success
@@ -23,7 +23,7 @@ PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
 [ -n "$PSTAT" ] || PSTAT=0
 DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
 mkdir -p $DIR
-git archive "$REV" | tar -x -C "$DIR"
+git archive "$NEWSHA" | tar -x -C "$DIR"
 cd $DIR
 LOGFILE=../$REV.log
 echo "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee $LOGFILE
@@ -44,3 +44,5 @@ fi
 [ -f "$HOOK-$SHORTREF" ] && \
   echo $INPUT | exec "$HOOK-$SHORTREF" "$DIR" "$STAT" "$PSTAT" 2>&1
 rm -rf $DIR
+
+done

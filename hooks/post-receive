@@ -19,14 +19,13 @@ HOOK=hooks/tinci
 WORK=.tinci
 mkdir -p $WORK
 PLOGFILE=$(ls -1t $WORK/*.log 2>/dev/null | head -n1)
-PREV=$(echo "$PLOGFILE" | cut -d '.' -f 1)
 PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
 [ -n "$PSTAT" ] || PSTAT=0
 DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
 mkdir -p $DIR
 git archive "$NEWSHA" | tar -x -C "$DIR"
 cd $DIR
-LOGFILE=../$REV.log
+LOGFILE=../$NEWSHA.log
 echo "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee $LOGFILE
 { eval "$CMD" 2>&1; echo "# code $?"; } | tee -a $LOGFILE
 STAT=$(tail -n1 $LOGFILE | sed -nE 's/^# code ([0-9]+)$/\1/p')

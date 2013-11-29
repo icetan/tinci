@@ -9,7 +9,7 @@ while read OLDSHA NEWSHA REF ; do
 
 [[ "$NEWSHA" == "0000000000000000000000000000000000000000" ]] && continue
 SHORTREF=$(echo "$REF" | grep -o "[^/]*$")
-echo "$SHORTREF" | grep -E "^($MATCH)$" || continue
+echo "$SHORTREF" | grep -qE "^($MATCH)$" || continue
 INPUT="$OLDSHA $NEWSHA $REF"
 
 CMD=$(git config --get tinci.runner)

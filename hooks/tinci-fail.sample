@@ -7,16 +7,16 @@
 # $ git config --add tinci.emails me@example.com,friend@example.com
 
 EMAILS=$(git config --get tinci.emails)
-[ -n "$EMAILS" ] || exit
+[ ! "$EMAILS" ] && exit
 
-read INPUT
-REV=$(echo "$INPUT" | cut -d ' ' -f 2 | head -c 10)
-REF=$(echo "$INPUT" | cut -d ' ' -f 3 | grep -o '[^\/]*$')
+read OLDSHA NEWSHA REF
 
-LOGFILE=.tinci/$REV.log
+REF=$(echo "$REF" | grep -o '[^\/]*$')
+LOGFILE=.tinci/$NEWSHA
 REPO=$(basename `pwd`)
+
 if [ $3 -eq 0 ];then
-  mail -s "tinci: $REPO ($REF) job has failed at ${REV}" $EMAILS < $LOGFILE
+  mail -s "tinci: $REPO ($REF) job has failed at ${NEWSHA}" $EMAILS < $LOGFILE
 else
   mail -s "tinci: $REPO ($REF) job is still failing" $EMAILS < $LOGFILE
 fi

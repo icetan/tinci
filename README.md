@@ -45,8 +45,8 @@ The `tinci.match` setting uses regexp so you can specify tinci to run on all
 pushes by giving the value `.*`.
 
 tinci will execute its own hooks on completion of a job. Place executable files
-in your repos `hooks` directory with the name `tinci`, `tinci-<branch>`,
-`tinci-success` or `tinci-fail`.
+in your repos `hooks` directory with the name `tinci`, `tinci-success` or
+`tinci-fail`.
 
 Each hook script will be called with the following arguments:
 
@@ -54,16 +54,9 @@ Each hook script will be called with the following arguments:
 1. current job's exit code
 1. last job's exit code
 
-The `tinci` and `tinci-<branch>` hooks will be called on all completed jobs.
-`tinci-success` is only called on a job that exits with a zero and `tinci-fail`
-will only be called when a job exits with non-zero.
-
-`<branch>` in `tinci-<branch>` will be replaced with the current short ref name
-of the current job.
-
-Example: `git push origin master:deploy` till trigger a
-tinci job on the `deploy` branch on `origin` and will look for and execute a
-hook script with the name `tinci-deploy`.
+The `tinci` hook will be called on all completed jobs. `tinci-success` is only
+called on a job that exits with a zero and `tinci-fail` will only be called
+when a job exits with non-zero.
 
 These hooks are compatible with `post-receive`, in other words each script will
 be called with the same `stdin` value as the `post-receive` was.

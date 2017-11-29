@@ -1,5 +1,5 @@
-#!/bin/sh
-TINCIV=2.1.0
+#!/bin/bash
+TINCIV=2.1.1
 
 while read OLDSHA NEWSHA REF ; do
 
@@ -28,16 +28,16 @@ if [ "$CMD" ]; then
   git archive "$NEWSHA" | tar -x -C "$DIR"
   cd "$DIR"
   LOGFILE="../$NEWSHA.log"
-  echo "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee "$LOGFILE"
+  echo -e "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee "$LOGFILE"
   { eval "$CMD" 2>&1; echo "# code $?"; } | tee -a "$LOGFILE"
   STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
   cd ../..
   if [ $STAT -eq 0 ];then
-    [ $PSTAT -eq 0 ] && echo "\nJob successful!" || echo "\nJob fixed!"
+    [ $PSTAT -eq 0 ] && echo -e "\nJob successful!" || echo -e "\nJob fixed!"
     [ -f "$SUCCESS" ] && \
       echo $INPUT | exec "$SUCCESS" "$DIR" "$STAT" "$PSTAT" 2>&1
   else
-    [ $PSTAT -eq 0 ] && echo >&2 "\nJob failed!" || echo >&2 "\nJob is still failing!"
+    [ $PSTAT -eq 0 ] && echo -e >&2 "\nJob failed!" || echo -e >&2 "\nJob is still failing!"
     [ -f "$FAIL" ] && \
       echo $INPUT | exec "$FAIL" "$DIR" "$STAT" "$PSTAT" 2>&1
   fi

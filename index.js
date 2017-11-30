@@ -172,7 +172,8 @@ http.createServer(function(req, res) {
         if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
         model.logs = (function(){
           if (url.query.log) {
-            return [dict[url.query.log]];
+            var log = dict[url.query.log];
+            return log ? [log] : [];
           } else {
             page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
             return ls.slice(

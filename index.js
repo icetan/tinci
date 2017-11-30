@@ -40,6 +40,10 @@ function colorize(text) {
 function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
   var child = spawn("sh", ["-c", cmd]);
+  child.on('error', (err) => {
+    console.error('Failed to execute command', err);
+    if (callback) callback(err)
+  });
   child.on('close', function(code) {
     var err = code !== 0
       ? new Error("logExec: shell exited with non-zero: " + code)

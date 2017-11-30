@@ -11,6 +11,7 @@ var fs = require('fs'),
     port = parseInt(process.argv[3] || process.env.TINCI_PORT || 4567),
     secret = process.env.TINCI_SECRET || null,
     tmplpath = process.env.TINCI_TEMPLATE || require.resolve('./template.html'),
+    debug = process.env.TINCI_DEBUG != null,
     tmpl = fs.readFileSync(tmplpath, 'utf8'),
     hookpath = require.resolve('./hooks/post-receive'),
     hookVersion = parseHookVersion(hookpath),
@@ -42,14 +43,14 @@ function colorize(text) {
 };
 
 function logExec(cmd, callback) {
-  var sconf = process.TINCI_DEBUG
+  var sconf = debug
     ? {}
     : { stdio: ['ignore', 'ignore', 'ignore'] };
 
   console.log('Execting shell command:', cmd);
 
   var child = spawn("sh", ["-c", cmd], sconf);
-  if (process.TINCI_DEBUG) {
+  if (debug) {
     child.stdout.on('data', (data) => {
       console.log(data.toString('utf8'));
     });
@@ -177,6 +178,7 @@ http.createServer(function(req, res) {
             }
             if (pass) {
               gitinfo = JSON.parse(parse('?'+data, true).query.payload);
+              if (debug) console.log("Got webook", JSON.stringify(gitinfo));
               invokeHook(pathname, gitinfo.before, gitinfo.after, gitinfo.ref);
               res.writeHead(200);
             } else {
@@ -263,3 +265,4 @@ http.createServer(function(req, res) {
 }).listen(port);
 
 console.log('tinci vision at http://localhost:'+port);
+if (debug) console.log('DEBUG MODE')

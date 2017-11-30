@@ -4,7 +4,7 @@ var fs = require('fs'),
     path = require('path'),
     parse = require('url').parse,
     http = require('http'),
-    exec = require('child_process').exec,
+    spawn = require('child_process').spawn,
     rootpath = path.resolve(process.argv[2] || '.'),
     port = parseInt(process.argv[3]) || process.env.PORT || 4567,
     tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
@@ -15,7 +15,7 @@ var fs = require('fs'),
     statusChars = ['✓', '✗', '—'];
 
 function esc(str) {
-  return str.replace(/'/g, '"');
+  return str.replace(new RegExp("'", "g", '"'));
 }
 
 function fdate(d) {
@@ -39,11 +39,16 @@ function colorize(text) {
 
 function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
-  exec(cmd, function (err, stdout, stderr) {
-    console.log(err, stderr);
-    if (callback) callback(err, stdout, stderr);
-  });
+  var child = spawn("sh", ["-c", cmd]);
+  child.on('close', function(code) {
+    var err = code !== 0
+      ? new Error("logExec: shell exited with non-zero: " + code)
+      : null;
+    if (err) console.error(err)
+    if (callback) callback(err)
+  })
 }
+
 function copyHook(to, runner, match, callback) {
   var eto = esc(to), er = esc(runner), em = esc(match);
   logExec("cp '"+esc(hookpath)+"' '"+eto+"/hooks/post-receive' && "+

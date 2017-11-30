@@ -117,6 +117,23 @@ function parseLog(log) {
   return log;
 }
 
+function writeView(res, model, format) {
+  if (format === 'html') {
+    model.status = statusChars[model.status];
+    model.logs = model.logs.map(function(log) {
+      return log ? logToHtml(log) : '';
+    }).join('');
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(template(model));
+  } else if (url.query.log && format === 'text') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end(model.logs[0].log);
+  } else {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(model));
+  }
+}
+
 function logs(tincipath) {
   var res = {logs:[], dict:{}};
   if (fs.existsSync(tincipath)) {
@@ -183,21 +200,32 @@ http.createServer(function(req, res) {
           installedVersion: hookv
       };
       if ('update' in url.query) {
-        if (url.query.runner) {
-          copyHook(
-            pathname,
-            url.query.runner,
-            url.query.match||'master',
-            function () {
-              res.writeHead(302, { 'Location': url.pathname });
-              res.end();
+        req.on('data', function(chunk) { data += chunk; })
+        .on('end', function() {
+          var formdata = parse('?'+data, true).query;
+          if (formdata.runner) {
+            if (secret != null && secret !== formdata.secret) {
+              res.writeHead(403);
+              res.end("Unauthorized: incorrect secret");
+              return;
+            } else {
+              copyHook(
+                pathname,
+                formdata.runner,
+                formdata.match || 'master',
+                function () {
+                  res.writeHead(302, { 'Location': url.pathname });
+                  res.end();
+                }
+              );
             }
-          );
-          return;
-        } else {
-          if (hookv != null) model.overwrite = 'show';
-          model.config = 'show';
-        }
+          } else {
+            if (hookv != null) model.overwrite = 'show';
+            model.config = 'show';
+            model.secret = secret != null ? 'show' : '';
+            writeView(res, model, format);
+          }
+        });
       } else if (hookv) {
         tincipath = path.join(pathname, '.tinci');
         logs_ = logs(tincipath);
@@ -218,24 +246,11 @@ http.createServer(function(req, res) {
             );
           }
         })().map(function(log) { return parseLog(log); }).reverse();
+
+        writeView(res, model, format)
       } else {
         res.writeHead(302, { 'Location': url.pathname+'?update' });
         res.end();
-        return;
-      }
-      if (format === 'html') {
-        model.status = statusChars[model.status];
-        model.logs = model.logs.map(function(log) {
-          return log ? logToHtml(log) : '';
-        }).join('');
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(template(model));
-      } else if (url.query.log && format === 'text') {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end(model.logs[0].log);
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(model));
       }
     } else {
       res.writeHead(500);

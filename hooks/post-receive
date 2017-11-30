@@ -1,5 +1,5 @@
 #!/bin/bash
-TINCIV=3.0.1
+TINCIV=3.1.0
 
 while read OLDSHA NEWSHA REF ; do
 
@@ -7,11 +7,14 @@ while read OLDSHA NEWSHA REF ; do
 
 WORK=.tinci
 THOOK="hooks/tinci"
+TPREHOOK="hooks/tinci-pre"
 TSTAT=0
 INPUT="$OLDSHA $NEWSHA $REF"
 SHORTREF=$(echo "$REF" | grep -o "[^/]*$")
-SECTIONS="$(git config -l | grep -o '^tinci\(\.[^=]*\)*\.' | sed 's/\.$//' | uniq)"
 
+[ -f "$TPREHOOK" ] && echo $INPUT | exec "$TPREHOOK" 2>&1
+
+SECTIONS="$(git config -l | grep -o '^tinci\(\.[^=]*\)*\.' | sed 's/\.$//' | uniq)"
 for SECTION in $SECTIONS ; do
 
 MATCH="$(git config --get $SECTION.match)"
@@ -19,7 +22,7 @@ echo "$SHORTREF" | grep -qE "^($MATCH)$" || continue
 
 SNAME="$(echo "$SECTION" | sed 's/^tinci$/main/;s/^tinci\.//')"
 HOOK="$THOOK.$SNAME"
-PREHOOK="$HOOK.pre"
+PREHOOK="$TPREHOOK.$SNAME"
 CMD="$(git config --get $SECTION.runner)"
 
 if [ "$CMD" ]; then

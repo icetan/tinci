@@ -236,17 +236,15 @@ http.createServer(function(req, res) {
         if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
         model.logs = (function(){
           if (url.query.log) {
-            var log = dict[url.query.log];
-            return log ? [log] : [];
-          } else {
-            page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
-            return ls.slice(
-              page[0],
-              page[1] === ''
-                ? undefined
-                : parseInt(page[0])+(parseInt(page[1])||10)
-            );
+            ls = ls.filter(function(l) { return l.rev.indexOf(url.query.log) >= 0; });
           }
+          page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
+          return ls.slice(
+            page[0],
+            page[1] === ''
+              ? undefined
+              : parseInt(page[0])+(parseInt(page[1])||10)
+          )
         })().map(function(log) { return parseLog(log); }).reverse();
 
         writeView(res, model, format)

@@ -42,17 +42,21 @@ function colorize(text) {
 };
 
 function logExec(cmd, callback) {
+  var sconf = process.TINCI_DEBUG
+    ? {}
+    : { stdio: ['ignore', 'ignore', 'ignore'] };
+
   console.log('Execting shell command:', cmd);
-  var child = spawn(
-    "sh", ["-c", cmd],
-    { stdio: ['ignore', 'ignore', 'ignore'] }
-  );
-  //child.stdout.on('data', (data) => {
-  //  console.log(data.toString('utf8'));
-  //});
-  //child.stderr.on('data', (data) => {
-  //  console.error(data.toString('utf8'));
-  //});
+
+  var child = spawn("sh", ["-c", cmd], sconf);
+  if (process.TINCI_DEBUG) {
+    child.stdout.on('data', (data) => {
+      console.log(data.toString('utf8'));
+    });
+    child.stderr.on('data', (data) => {
+      console.error(data.toString('utf8'));
+    });
+  }
   child.on('error', (err) => {
     console.error('Failed to execute command', err);
     if (callback) callback(err)

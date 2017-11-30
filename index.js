@@ -39,7 +39,10 @@ function colorize(text) {
 
 function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
-  var child = spawn("sh", ["-c", cmd]);
+  var child = spawn(
+    "sh", ["-c", cmd],
+    { detached: false, stdio: ['ignore', 'ignore', 'ignore'] }
+  );
   child.on('error', (err) => {
     console.error('Failed to execute command', err);
     if (callback) callback(err)

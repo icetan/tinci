@@ -4,10 +4,14 @@ var fs = require('fs'),
     path = require('path'),
     parse = require('url').parse,
     http = require('http'),
+    crypto = require('crypto'),
     spawn = require('child_process').spawn,
+
     rootpath = path.resolve(process.argv[2] || '.'),
-    port = parseInt(process.argv[3]) || process.env.PORT || 4567,
-    tmpl = fs.readFileSync(require.resolve('./template.html'), 'utf8'),
+    port = parseInt(process.argv[3] || process.env.TINCI_PORT || 4567),
+    secret = process.env.TINCI_SECRET || null,
+    tmplpath = process.env.TINCI_TEMPLATE || require.resolve('./template.html'),
+    tmpl = fs.readFileSync(tmplpath, 'utf8'),
     hookpath = require.resolve('./hooks/post-receive'),
     hookVersion = parseHookVersion(hookpath),
     guiVersion = require('./package.json').version,
@@ -41,8 +45,14 @@ function logExec(cmd, callback) {
   console.log('Execting shell command:', cmd);
   var child = spawn(
     "sh", ["-c", cmd],
-    { detached: false, stdio: ['ignore', 'ignore', 'ignore'] }
+    { stdio: ['ignore', 'ignore', 'ignore'] }
   );
+  //child.stdout.on('data', (data) => {
+  //  console.log(data.toString('utf8'));
+  //});
+  //child.stderr.on('data', (data) => {
+  //  console.error(data.toString('utf8'));
+  //});
   child.on('error', (err) => {
     console.error('Failed to execute command', err);
     if (callback) callback(err)
@@ -66,7 +76,7 @@ function copyHook(to, runner, match, callback) {
 
 function invokeHook(to, before, after, ref, callback) {
   var eref = esc(ref);
-  logExec("cd '"+esc(to)+"' && git fetch origin '"+eref+":"+eref+"' && "+
+  logExec("cd '"+esc(to)+"' && git fetch -f origin '"+eref+":"+eref+"' && "+
     "echo '"+esc(before+" "+after+" "+ref)+"' | hooks/post-receive",
   callback);
 }
@@ -125,7 +135,7 @@ http.createServer(function(req, res) {
   var url = parse(req.url, true),
       pathname = path.resolve(rootpath, './'+url.pathname),
       format = url.query.format || 'html',
-      model = {}, data = '?', logs_, ls, dict,
+      model = {}, data = '', logs_, ls, dict,
       page, reponame, tincipath, hookv;
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
     reponame = path.basename(pathname, '.git');
@@ -133,14 +143,27 @@ http.createServer(function(req, res) {
       if ('invoke' in url.query) {
         req.on('data', function(chunk) { data += chunk; })
         .on('end', function() {
-          var gitinfo;
+          var gitinfo, payload, pass;
           try {
-            gitinfo = JSON.parse(parse(data, true).query.payload);
-            invokeHook(pathname, gitinfo.before, gitinfo.after, gitinfo.ref);
-            res.writeHead(200);
-          } catch (ex) {
+            if (secret == null) {
+              pass = true;
+            } else if (req.headers['x-hub-signature'] == null) {
+              pass = false;
+            } else {
+              sig = req.headers['x-hub-signature'].split('=')
+              hmac = crypto.createHmac(sig[0], secret).update(data).digest('hex')
+              pass = hmac.toLowerCase() === sig[1].toLowerCase();
+            }
+            if (pass) {
+              gitinfo = JSON.parse(parse('?'+data, true).query.payload);
+              invokeHook(pathname, gitinfo.before, gitinfo.after, gitinfo.ref);
+              res.writeHead(200);
+            } else {
+              res.writeHead(403);
+            }
+          } catch (err) {
             res.writeHead(500);
-            console.log('Error on invoke call: '+ex.message);
+            console.error('Error on invoke call:', err);
           }
           res.end();
         });

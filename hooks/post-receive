@@ -1,5 +1,5 @@
 #!/bin/bash
-TINCIV=3.0.0
+TINCIV=3.0.1
 
 while read OLDSHA NEWSHA REF ; do
 
@@ -29,7 +29,7 @@ if [ "$CMD" ]; then
   [ ! "$PSTAT" ] && PSTAT=0
   DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
   mkdir -p "$DIR"
-  [ -f "$PREHOOK" ] && echo $INPUT | exec "$PREHOOK" "$DIR" "$PSTAT" 2>&1
+  [ -f "$PREHOOK" ] && echo $INPUT | exec "$PREHOOK" "$PSTAT" 2>&1
   git archive "$NEWSHA" | tar -x -C "$DIR"
   cd "$DIR"
   LOGFILE="../$SNAME.$NEWSHA.log"

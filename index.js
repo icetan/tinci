@@ -71,12 +71,8 @@ function logExec(cmd, callback) {
   })
 }
 
-function copyHook(to, runner, match, callback) {
-  var eto = esc(to), er = esc(runner), em = esc(match);
-  logExec("cp '"+esc(hookpath)+"' '"+eto+"/hooks/post-receive' && "+
-    "git config -f '"+eto+"/config' --replace-all tinci.runner '"+er+"' && "+
-    "git config -f '"+eto+"/config' --replace-all tinci.match '"+em+"'",
-  callback);
+function copyHook(to, callback) {
+  logExec("cp '"+esc(hookpath)+"' '"+esc(to)+"/hooks/post-receive'", callback);
 }
 
 function invokeHook(to, before, after, ref, callback) {
@@ -202,10 +198,10 @@ http.createServer(function(req, res) {
           installedVersion: hookv
       };
       if ('update' in url.query) {
-        req.on('data', function(chunk) { data += chunk; })
-        .on('end', function() {
-          var formdata = parse('?'+data, true).query;
-          if (formdata.runner) {
+        if (req.method.toLowerCase() === 'post') {
+          req.on('data', function(chunk) { data += chunk; })
+          .on('end', function() {
+            var formdata = parse('?'+data, true).query;
             if (secret != null && secret !== formdata.secret) {
               res.writeHead(403);
               res.end("Unauthorized: incorrect secret");
@@ -213,21 +209,19 @@ http.createServer(function(req, res) {
             } else {
               copyHook(
                 pathname,
-                formdata.runner,
-                formdata.match || 'master',
                 function () {
                   res.writeHead(302, { 'Location': url.pathname });
                   res.end();
                 }
               );
             }
-          } else {
-            if (hookv != null) model.overwrite = 'show';
-            model.config = 'show';
-            model.secret = secret != null ? 'show' : '';
-            writeView(res, model, format);
-          }
-        });
+          });
+        } else {
+          if (hookv != null) model.overwrite = 'show';
+          model.config = 'show';
+          model.secret = secret != null ? 'show' : '';
+          writeView(res, model, format);
+        }
       } else if (hookv) {
         tincipath = path.join(pathname, '.tinci');
         logs_ = logs(tincipath);

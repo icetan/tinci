@@ -1,0 +1,26 @@
+#!/bin/bash
+
+read OLDSHA NEWSHA REF
+
+API_TOKEN=$(git config --get tinci.status-api-token)
+API_URL=$(git config --get tinci.status-api-url)
+CALLBACK_URL=$(git config --get tinci.callback-url)
+[[ "$API_URL" && "$API_TOKEN" ]] \
+  || (echo "tinci.status-api-token or tinci.status-api-url not set"; exit)
+
+cmd() {
+  curl \
+    -H "Authorization: token $API_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @- \
+    "$API_URL/$NEWSHA"
+}
+
+cmd <<EOF
+{
+  "state": "pending",
+  "target_url": "$CALLBACK_URL/?filter=.$NEWSHA",
+  "description": "Starting build",
+  "context": "continuous-integration/tinci"
+}
+EOF

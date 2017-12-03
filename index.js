@@ -7,7 +7,7 @@ var fs = require('fs'),
     crypto = require('crypto'),
     spawn = require('child_process').spawn,
 
-    rootpath = path.resolve(process.argv[2] || '.'),
+    rootpath = path.resolve(process.argv[2] || process.env.TINCI_ROOT || '.'),
     port = parseInt(process.argv[3] || process.env.TINCI_PORT || 4567),
     secret = process.env.TINCI_SECRET || null,
     tmplpath = process.env.TINCI_TEMPLATE || require.resolve('./template.html'),
@@ -122,12 +122,15 @@ function writeView(res, model, format) {
     }).join('');
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(template(model));
-  } else if (url.query.log && format === 'text') {
+  } else if (format === 'txt') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end(model.logs[0].log);
-  } else {
+  } else if (format === 'json') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(model));
+  } else {
+    res.writeHead(400);
+    res.end('Bad request');
   }
 }
 
@@ -151,14 +154,18 @@ function logs(tincipath) {
 
 http.createServer(function(req, res) {
   var url = parse(req.url, true),
-      pathname = path.resolve(rootpath, './'+url.pathname),
-      format = url.query.format || 'html',
+      call = url.pathname.split('/'),
+      reponame = call[1],
+      actionCall = (call[2] || 'list.html').split('.'),
+      action = actionCall[0],
+      format = actionCall[1],
+      pathname = path.resolve(rootpath, './'+reponame+'.git'),
       model = {}, data = '', logs_, ls, dict,
       page, reponame, tincipath, hookv;
+  if (debug) console.log('Repo path:', pathname);
   if (pathname.indexOf(rootpath) === 0 && fs.existsSync(pathname)) {
-    reponame = path.basename(pathname, '.git');
     if (fs.existsSync(path.join(pathname, 'hooks'))) {
-      if ('invoke' in url.query) {
+      if (action === 'invoke') {
         req.on('data', function(chunk) { data += chunk; })
         .on('end', function() {
           var gitinfo, payload, pass;
@@ -197,7 +204,7 @@ http.createServer(function(req, res) {
           hookVersion: hookVersion,
           installedVersion: hookv
       };
-      if ('update' in url.query) {
+      if (action === 'update') {
         if (req.method.toLowerCase() === 'post') {
           req.on('data', function(chunk) { data += chunk; })
           .on('end', function() {
@@ -222,29 +229,34 @@ http.createServer(function(req, res) {
           model.secret = secret != null ? 'show' : '';
           writeView(res, model, format);
         }
-      } else if (hookv) {
-        tincipath = path.join(pathname, '.tinci');
-        logs_ = logs(tincipath);
-        ls = logs_.logs;
-        dict = logs_.dict;
-        if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
-        model.logs = (function(){
-          if (url.query.log) {
-            ls = ls.filter(function(l) { return l.rev.indexOf(url.query.log) >= 0; });
-          }
-          page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
-          return ls.slice(
-            page[0],
-            page[1] === ''
-              ? undefined
-              : parseInt(page[0])+(parseInt(page[1])||10)
-          )
-        })().map(function(log) { return parseLog(log); }).reverse();
+      } else if (action === 'list') {
+        if (hookv) {
+          tincipath = path.join(pathname, '.tinci');
+          logs_ = logs(tincipath);
+          ls = logs_.logs;
+          dict = logs_.dict;
+          if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
+          model.logs = (function(){
+            if (url.query.filter) {
+              ls = ls.filter(function(l) { return l.rev.indexOf(url.query.filter) >= 0; });
+            }
+            page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
+            return ls.slice(
+              page[0],
+              page[1] === ''
+                ? undefined
+                : parseInt(page[0])+(parseInt(page[1])||10)
+            )
+          })().map(function(log) { return parseLog(log); }).reverse();
 
-        writeView(res, model, format)
+          writeView(res, model, format)
+        } else {
+          res.writeHead(302, { 'Location': '/'+reponame+'/update' });
+          res.end();
+        }
       } else {
-        res.writeHead(302, { 'Location': url.pathname+'?update' });
-        res.end();
+        res.writeHead(400);
+        res.end('Bad request: action "'+action+'" not available');
       }
     } else {
       res.writeHead(500);

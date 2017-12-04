@@ -98,7 +98,7 @@ function template(model) {
 function logToHtml(log) {
   return '<article><h2><span class="' + statusChars[log.status] + '">' +
     statusChars[log.status] + '</span> ' + log.ref +
-    ' <small>'+ fdate(log.ctime) + ' <a href="?log='+log.rev+'">' + log.rev +
+    ' <small>'+ fdate(log.ctime) + ' <a href="?filter='+log.rev+'">' + log.rev +
     '</a></small></h2>' + '<pre>' +
     colorize(log.log.replace(/\r?\n/g, '<br>')) + '</pre></article>';
 }

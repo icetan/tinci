@@ -158,7 +158,7 @@ http.createServer(function(req, res) {
       reponame = call[1],
       actionCall = (call[2] || 'list.html').split('.'),
       action = actionCall[0],
-      format = actionCall[1],
+      format = actionCall[1] || 'html',
       pathname = path.resolve(rootpath, './'+reponame+'.git'),
       model = {}, data = '', logs_, ls, dict,
       page, reponame, tincipath, hookv;
@@ -217,7 +217,7 @@ http.createServer(function(req, res) {
               copyHook(
                 pathname,
                 function () {
-                  res.writeHead(302, { 'Location': url.pathname });
+                  res.writeHead(302, { 'Location': '/'+reponame+'/' });
                   res.end();
                 }
               );

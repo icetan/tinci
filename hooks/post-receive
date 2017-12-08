@@ -1,5 +1,5 @@
 #!/bin/bash
-TINCIV=6.0.1
+TINCIV=6.1.0
 
 HOOK="$(pwd)/hooks/tinci"
 PREHOOK="$(pwd)/hooks/tinci-pre"
@@ -23,19 +23,23 @@ while read OLDSHA NEWSHA REF ; do
   WDIR=$TDIR/$NEWSHA
   mkdir -p $WDIR
 
-  [ -f $PLOGFILE ] && PSTAT=$(tail -n1 $PLOGFILE 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
+  git archive $NEWSHA | tar -x -C $WDIR
+
+  [ -f $PLOGFILE ] && PSTAT=$(tail -n1 $PLOGFILE | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$PSTAT" ] && PSTAT=0
 
-  git archive $NEWSHA | tar -x -C $WDIR
+  [ -x "$PREHOOK" ] && echo $INPUT | sh "$PREHOOK" $PSTAT $WDIR 2>&1
+
   ( cd $WDIR
-    [ -x "$PREHOOK" ] && echo $INPUT | sh "$PREHOOK" $PSTAT 2>&1
+    echo -e "# tinci $TINCIV\n# ref $REF\n# running sh $CMD"
+    sh "$CMD" 2>&1
+    echo "# code $?"
+  ) | tee "$LOGFILE"
 
-    echo -e "# tinci $TINCIV\n# ref $REF\n# running sh $CMD" | tee "$LOGFILE"
-    ( sh "$CMD" 2>&1; echo "# code $?" ) | tee -a "$LOGFILE"
-    STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
+  STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
+  [ ! "$STAT" ] && STAT=-1
 
-    [ -x "$HOOK" ] && echo $INPUT | sh "$HOOK" "$STAT" 2>&1
-  )
+  [ -x "$HOOK" ] && echo $INPUT | sh "$HOOK" $STAT $WDIR 2>&1
 
   if [ $STAT -eq 0 ]; then
     [ $PSTAT -eq 0 ] && echo -e "\nJob successful!" || echo -e "\nJob fixed!"

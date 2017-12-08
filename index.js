@@ -238,7 +238,7 @@ http.createServer(function(req, res) {
           if (ls.length) model.status = parseLog(ls[ls.length-1]).status;
           model.logs = (function(){
             if (url.query.filter) {
-              ls = ls.filter(function(l) { return l.rev.indexOf(url.query.filter) >= 0; });
+              ls = ls.filter(function(l) { return l.rev.indexOf(url.query.filter) == 0; });
             }
             page = (url.query.page || Math.max(0,ls.length-10)+',').split(',');
             return ls.slice(

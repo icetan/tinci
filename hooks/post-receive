@@ -1,57 +1,45 @@
 #!/bin/bash
-TINCIV=5.0.0
+TINCIV=6.0.0
+
+HOOK="$(pwd)/hooks/tinci"
+PREHOOK="$(pwd)/hooks/tinci-pre"
+LOGDIR="$(pwd)/.tinci"
+mkdir -p "$LOGDIR"
+
+TDIR=$(mktemp -d "${TMPDIR:-/tmp}"/tinci.XXXXXXXX)
+mkdir -p $TDIR
+trap "trap - EXIT; rm -rf $TDIR" EXIT
 
 while read OLDSHA NEWSHA REF ; do
 
-[ "$NEWSHA" != "0000000000000000000000000000000000000000" ] || continue
+  [ "$NEWSHA" != "0000000000000000000000000000000000000000" ] || continue
 
-SECTIONS="$(git archive $NEWSHA | tar -t | grep '^.tinci')"
-[ "$SECTIONS" ] || continue
+  CMD="$(git archive $NEWSHA | tar -t | grep '^.tinci$')"
+  [ "$CMD" ] || continue
 
-WORK=.tinci
-INPUT="$OLDSHA $NEWSHA $REF"
-THOOK="hooks/tinci"
-TPREHOOK="hooks/tinci-pre"
-TSTAT=0
+  INPUT="$OLDSHA $NEWSHA $REF"
+  LOGFILE="$LOGDIR/$NEWSHA.log"
+  PLOGFILE=$(ls -1t "$LOGDIR"/*.log 2>/dev/null | head -n1)
+  WDIR=$TDIR/$NEWSHA
+  mkdir -p $WDIR
 
-[ -f "$TPREHOOK" ] && echo $INPUT | exec "$TPREHOOK" 2>&1
-
-for SECTION in $SECTIONS ; do
-
-SNAME="$(echo "$SECTION" | sed 's/^.tinci$/main/;s/^.tinci\.//')"
-HOOK="$THOOK.$SNAME"
-PREHOOK="$TPREHOOK.$SNAME"
-CMD="sh $SECTION"
-
-if [ "$CMD" ]; then
-  mkdir -p "$WORK"
-  PLOGFILE=$(ls -1t $WORK/$SNAME.*.log 2>/dev/null | head -n1)
-  PSTAT=$(tail -n1 "$PLOGFILE" 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
+  PSTAT=$(tail -n1 $PLOGFILE 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$PSTAT" ] && PSTAT=0
-  DIR=$WORK/job.$(od -A n -t d -N 2 /dev/urandom | tr -d ' ')
-  mkdir -p "$DIR"
-  [ -f "$PREHOOK" ] && echo $INPUT | exec "$PREHOOK" "$PSTAT" 2>&1
-  git archive "$NEWSHA" | tar -x -C "$DIR"
-  cd "$DIR"
-  LOGFILE="../$SNAME.$NEWSHA.log"
-  echo -e "# tinci $TINCIV\n# ref $REF\n# running $CMD" | tee "$LOGFILE"
-  { eval "$CMD" 2>&1; echo "# code $?"; } | tee -a "$LOGFILE"
-  STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
-  cd ../..
-  if [ $STAT -eq 0 ];then
+
+  git archive $NEWSHA | tar -x -C $WDIR
+  ( cd $WDIR
+    [ -x "$PREHOOK" ] && echo $INPUT | sh "$PREHOOK" $PSTAT 2>&1
+
+    echo -e "# tinci $TINCIV\n# ref $REF\n# running sh $CMD" | tee "$LOGFILE"
+    ( sh "$CMD" 2>&1; echo "# code $?" ) | tee -a "$LOGFILE"
+    STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
+
+    [ -x "$HOOK" ] && echo $INPUT | sh "$HOOK" "$STAT" 2>&1
+  )
+
+  if [ $STAT -eq 0 ]; then
     [ $PSTAT -eq 0 ] && echo -e "\nJob successful!" || echo -e "\nJob fixed!"
   else
-    ((TSTAT+=STAT))
     [ $PSTAT -eq 0 ] && echo -e >&2 "\nJob failed!" || echo -e >&2 "\nJob is still failing!"
   fi
-  [ -f "$HOOK" ] && \
-    echo $INPUT | exec "$HOOK" "$STAT" "$PSTAT" 2>&1
-fi
-rm -rf "$DIR"
-
-done
-
-[ -f "$THOOK" ] && \
-  echo $INPUT | exec "$THOOK" "$TSTAT" 2>&1
-
 done

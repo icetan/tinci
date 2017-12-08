@@ -20,7 +20,7 @@ if [ "$1" == 0 ] ; then
   cmd <<EOF
 {
   "state": "success",
-  "target_url": "$CALLBACK_URL/?filter=.$NEWSHA",
+  "target_url": "$CALLBACK_URL/?filter=$NEWSHA",
   "description": "The build succeeded!",
   "context": "continuous-integration/tinci"
 }
@@ -29,7 +29,7 @@ else
   cmd <<EOF
 {
   "state": "failure",
-  "target_url": "$CALLBACK_URL/?filter=.$NEWSHA",
+  "target_url": "$CALLBACK_URL/?filter=$NEWSHA",
   "description": "The build failed!",
   "context": "continuous-integration/tinci"
 }

@@ -19,7 +19,7 @@ cmd() {
 cmd <<EOF
 {
   "state": "pending",
-  "target_url": "$CALLBACK_URL/?filter=.$NEWSHA",
+  "target_url": "$CALLBACK_URL/?filter=$NEWSHA",
   "description": "Starting build",
   "context": "continuous-integration/tinci"
 }

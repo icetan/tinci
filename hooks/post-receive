@@ -1,5 +1,5 @@
 #!/bin/bash
-TINCIV=6.0.0
+TINCIV=6.0.1
 
 HOOK="$(pwd)/hooks/tinci"
 PREHOOK="$(pwd)/hooks/tinci-pre"
@@ -19,11 +19,11 @@ while read OLDSHA NEWSHA REF ; do
 
   INPUT="$OLDSHA $NEWSHA $REF"
   LOGFILE="$LOGDIR/$NEWSHA.log"
-  PLOGFILE=$(ls -1t "$LOGDIR"/*.log 2>/dev/null | head -n1)
+  PLOGFILE="$LOGDIR/$OLDSHA.log"
   WDIR=$TDIR/$NEWSHA
   mkdir -p $WDIR
 
-  PSTAT=$(tail -n1 $PLOGFILE 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
+  [ -f $PLOGFILE ] && PSTAT=$(tail -n1 $PLOGFILE 2>/dev/null | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$PSTAT" ] && PSTAT=0
 
   git archive $NEWSHA | tar -x -C $WDIR

@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
-read OLDSHA NEWSHA REF
+read -r OLDSHA NEWSHA REF
 
 API_TOKEN=$(git config --get tinci.status-api-token)
 API_URL=$(git config --get tinci.status-api-url)
 CALLBACK_URL=$(git config --get tinci.callback-url)
-[[ "$API_URL" && "$API_TOKEN" ]] \
+{ [ "$API_URL" ] && [ "$API_TOKEN" ]; } \
   || (echo "tinci.status-api-token or tinci.status-api-url not set"; exit)
 
 cmd() {
@@ -16,7 +16,7 @@ cmd() {
     "$API_URL/$NEWSHA"
 }
 
-if [ "$1" == 0 ] ; then
+if [ "$1" = 0 ] ; then
   cmd <<EOF
 {
   "state": "success",

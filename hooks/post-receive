@@ -24,22 +24,23 @@ while read OLDSHA NEWSHA REF ; do
   mkdir -p $WDIR
 
   git archive $NEWSHA | tar -x -C $WDIR
+  [ -x "$WDIR/$CMD" ] || continue
 
   [ -f $PLOGFILE ] && PSTAT=$(tail -n1 $PLOGFILE | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$PSTAT" ] && PSTAT=0
 
-  [ -x "$PREHOOK" ] && echo $INPUT | sh "$PREHOOK" $PSTAT $WDIR 2>&1
+  [ -x "$PREHOOK" ] && echo $INPUT | ./"$PREHOOK" $PSTAT $WDIR 2>&1
 
   ( cd $WDIR
-    echo -e "# tinci $TINCIV\n# ref $REF\n# running sh $CMD"
-    sh "$CMD" 2>&1
+    echo -e "# tinci $TINCIV\n# ref $REF\n# running: ./$CMD"
+    ./"$CMD" 2>&1
     echo "# code $?"
   ) | tee "$LOGFILE"
 
   STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$STAT" ] && STAT=-1
 
-  [ -x "$HOOK" ] && echo $INPUT | sh "$HOOK" $STAT $WDIR 2>&1
+  [ -x "$HOOK" ] && echo $INPUT | ./"$HOOK" $STAT $WDIR 2>&1
 
   if [ $STAT -eq 0 ]; then
     [ $PSTAT -eq 0 ] && echo -e "\nJob successful!" || echo -e "\nJob fixed!"

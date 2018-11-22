@@ -231,7 +231,7 @@ http.createServer(function(req, res) {
         }
       } else if (action === 'list') {
         if (hookv) {
-          tincipath = path.join(pathname, '.tinci');
+          tincipath = path.join(pathname, 'tinci');
           logs_ = logs(tincipath);
           ls = logs_.logs;
           dict = logs_.dict;

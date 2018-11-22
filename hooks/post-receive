@@ -5,7 +5,7 @@ set -e
 
 HOOK="$(pwd)/hooks/tinci"
 PREHOOK="$(pwd)/hooks/tinci-pre"
-LOGDIR="$(pwd)/.tinci"
+LOGDIR="$(pwd)/tinci"
 mkdir -p "$LOGDIR"
 
 TDIR=$(mktemp -d "${TMPDIR:-/tmp}"/tinci.XXXXXXXX)

@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/icetan/tinci.git"
   },
-  "license": "MIT",
+  "license": "unlicense",
   "engines": {
     "node": ">=0.8.0"
   },

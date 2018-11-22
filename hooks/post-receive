@@ -31,7 +31,7 @@ while read -r OLDSHA NEWSHA REF ; do
   [ -f "$PLOGFILE" ] && PSTAT=$(tail -n1 "$PLOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$PSTAT" ] && PSTAT=0
 
-  [ -x "$PREHOOK" ] && echo "$INPUT" | ./"$PREHOOK" $PSTAT "$WDIR" 2>&1
+  [ -x "$PREHOOK" ] && echo "$INPUT" | "$PREHOOK" $PSTAT "$WDIR" 2>&1
 
   ( cd "$WDIR" || exit 1
     printf %s "# tinci $TINCIV\\n# ref $REF\\n# running: ./$CMD"
@@ -42,7 +42,7 @@ while read -r OLDSHA NEWSHA REF ; do
   STAT=$(tail -n1 "$LOGFILE" | sed -nE 's/^# code ([0-9]+)$/\1/p')
   [ ! "$STAT" ] && STAT=-1
 
-  [ -x "$HOOK" ] && echo "$INPUT" | ./"$HOOK" $STAT "$WDIR" 2>&1
+  [ -x "$HOOK" ] && echo "$INPUT" | "$HOOK" $STAT "$WDIR" 2>&1
 
   if [ $STAT -eq 0 ]; then
     [ $PSTAT -eq 0 ] && printf \\n%s "Job successful!" || printf \\n%s "Job fixed!"

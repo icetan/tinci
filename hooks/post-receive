@@ -1,5 +1,5 @@
 #!/bin/sh
-TINCIV=7.0.0
+TINCIV=8.0.0
 
 set -e
 

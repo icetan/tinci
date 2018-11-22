@@ -5,63 +5,65 @@ tinci
 
 ![Screenshot of tinci GUI](https://raw.github.com/icetan/tinci/gh-pages/tinci-screenshot.png)
 
-For the looks
+Minimal Setup
 -------------
-
-You can setup tinci for a bare Git repo and view the build logs over HTTP.
-
-```
-$ npm install -g tinci
-$ tinci my/project.git/
-$ open http://localhost:4567
-```
-
-Invoke a fetch and build with WebHooks by doing a HTTP POST
-to ```http://localhost:4567?invoke```. More on [WebHooks and integration with
-GitHub](https://help.github.com/articles/post-receive-hooks).
-
-
-Just the hooks
---------------
 
 If you don't want the GUI then you can just copy the hook script to your Git
 repo manualy.
 
-```
-$ cp tinci/hooks/post-receive project.git/hooks/
-$ git config -f project.git/config --add tinci.runner "make test"
-```
-
-tinci will now run the shell command 'make test' each time someone pushes to
-your repos master branch.
-
-To run tinci on another branch or tag.
-
-```
-$ git config -f project.git/config --add tinci.match my-feature
+```sh
+git clone https://github.com/icetan/tinci
+git clone --bare my-project
+cp tinci/hooks/post-receive my-project.git/hooks/
 ```
 
-The `tinci.match` setting uses regexp so you can specify tinci to run on all
-pushes by giving the value `.*`.
+If there is a `.tinci` executable in the root of your repo then tinci will run
+it and log the output.
 
-tinci will execute its own hooks on completion of a job. Place executable files
-in your repos `hooks` directory with the name `tinci`, `tinci-success` or
-`tinci-fail`.
+```sh
+echo "#!/bin/sh
+make test" > my-project/.tinci
+chmod +x my-project/.tinci
+```
 
-Each hook script will be called with the following arguments:
+With HTTP Server
+----------------
 
-1. path to work directory
-1. current job's exit code
-1. last job's exit code
+You can setup tinci for a bare Git repo and view the build logs over HTTP.
 
-The `tinci` hook will be called on all completed jobs. `tinci-success` is only
-called on a job that exits with a zero and `tinci-fail` will only be called
-when a job exits with non-zero.
+```
+node tinci/index.js
+open http://localhost:4567/my-project
+```
 
-These hooks are compatible with `post-receive`, in other words each script will
-be called with the same `stdin` value as the `post-receive` was.
+tinci's Hooks
+-------------
 
-Here is a sample [fail hook for sending
-e-mail](https://raw.github.com/icetan/tinci/master/hooks/tinci-fail.sample) and
-a [hook which syncs files on `deploy` branch to Amazon
-S3](https://raw.github.com/icetan/tinci/master/hooks/tinci.deploy.sample).
+tinci will execute its own hooks after the `.tinci` script is done. Place
+executable files in your repos `hooks` directory with the name `tinci` or
+`tinci-pre`.
+
+`hooks/tinci` is called with two arguments, the exit code of `.tinci` and the
+path to the repos work tree.
+
+`hooks/tinci-pre` is called with two arguments, the exit code of `.tinci` in
+the previous commit and the path to the repos work tree.
+
+Hooks also receive the last commit hash, the current commit hash and the current
+ref on its STDIN.
+
+Here are samples of how to integrate tinci with GitHubs WebHooks to get status
+reports on commits:
+
+- [hooks/tinci](https://raw.github.com/icetan/tinci/master/hooks/tinci.sample)
+- [hooks/tinci-pre](https://raw.github.com/icetan/tinci/master/hooks/tinci-pre.sample).
+
+Add to the `config` file in your bare repo and configure the values to match
+your GitHub repo:
+
+```
+[tinci]
+    status-api-token = abcdef0123456789...
+    status-api-url = https://api.github.com/repos/me/my-project/statuses
+    callback-url = https://tinci.example.org/my-project
+```

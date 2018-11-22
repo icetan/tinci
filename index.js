@@ -72,7 +72,8 @@ function logExec(cmd, callback) {
 }
 
 function copyHook(to, callback) {
-  logExec("cp '"+esc(hookpath)+"' '"+esc(to)+"/hooks/post-receive'", callback);
+  var eto = "'"+esc(to)+"/hooks/post-receive'";
+  logExec("cp '"+esc(hookpath)+"' "+eto+" && chmod u+w "+eto, callback);
 }
 
 function invokeHook(to, before, after, ref, callback) {

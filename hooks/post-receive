@@ -34,7 +34,7 @@ while read -r OLDSHA NEWSHA REF ; do
   [ -x "$PREHOOK" ] && echo "$INPUT" | "$PREHOOK" $PSTAT "$WDIR" 2>&1
 
   ( cd "$WDIR" || exit 1
-    printf %s "# tinci $TINCIV\\n# ref $REF\\n# running: ./$CMD"
+    printf %s\\n "# tinci $TINCIV" "# ref $REF" "# running: ./$CMD"
     ./"$CMD" 2>&1
     echo "# code $?"
   ) | tee "$LOGFILE"

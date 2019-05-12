@@ -15,9 +15,10 @@
     exec ${tinci}/bin/tinci
   '';
 in {
-  config = {
+
+  config = lib.mkIf cfg.enable {
     systemd.services.tinci = {
-      enable = cfg.enable;
+      enable = true;
       description = "Tin CI HTTP server";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
